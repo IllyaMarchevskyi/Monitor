@@ -82,7 +82,7 @@ static void initSerials() {
 }
 
 static void pollMonitoringData() {
-  if (!time_guard_allow('monitoring', MONITOR_TIME_SLEEP))
+  if (!time_guard_allow("monitoring", MONITOR_TIME_SLEEP))
     return;
 
   poll_SensorBox_SensorZTS3008(alive2, alive4, alive6, alive7);

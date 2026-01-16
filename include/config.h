@@ -17,9 +17,9 @@
 
 // --------- Globals mass --------------
 extern double send_arr[];
-extern uint32_t sensors_dec[];
-extern uint32_t radiation_uSvh;
-extern uint32_t service_t[];
+extern float sensors_dec[];
+extern float radiation_uSvh;
+extern float service_t[];
 
 // ---------- Value Timers -------------
 constexpr uint32_t MONITOR_TIME_SLEEP = 1 * SEC;

@@ -5,7 +5,7 @@
 
 ModbusMaster sensor_box;
 
-static void read_TEMP_RH(uint32_t *mass);
+static void read_TEMP_RH(float *mass);
 static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
                                bool &alive4);
 static inline float floatFromWords(uint16_t high_word, uint16_t low_word);
@@ -29,7 +29,7 @@ void poll_SensorBox_SensorZTS3008(bool &alive1, bool &alive2, bool &alive3,
   pollAllSensorBoxes(alive2, alive4, alive3, alive4);
 }
 
-static void read_TEMP_RH(uint32_t *mass) {
+static void read_TEMP_RH(float *mass) {
   if (!rs485_acquire(500))
     return;
   sensor_box.begin(11, Serial3);

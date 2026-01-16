@@ -51,11 +51,11 @@ void drawData() {
   }
 }
 
-void drawOnlyValue() {
-  int x;
-  int y;
+void  drawOnlyValue() {
   if (!time_guard_allow("draw/update", DRAW_TIME_SLEEP, true))
     return;
+  int x;
+  int y;
   for (uint16_t i = 0; i < labels_len; i++) {
     if (send_arr[i] != prev_send_arr[i]) {
       x = (i < len_col)       ? col1_x_value
