@@ -96,7 +96,7 @@ static bool isInternetAlive(const IPAddress &testIp, uint16_t port,
 
 void ensureNetOrRebootPort0() {
   relayTimedPulse(UNIT_ID, CH);
-  if (!time_guard_allow("relay", RELAY_SLEEP, true))
+  if (!time_guard_allow("relay", RELAY_TIME_SLEEP, true))
     return;
   if (isInternetAlive(NET_CHECK_IP, NET_CHECK_PORT))
     return;

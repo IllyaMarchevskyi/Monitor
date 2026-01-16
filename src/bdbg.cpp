@@ -25,7 +25,7 @@ void pollRadiation() {
 }
 
 static void bdbgPeriodicRequest() {
-  if (millis() - bdbg_last_req >= BDBG_REQ_PERIOD_MS) {
+  if (millis() - bdbg_last_req >= BDBG_TIME_SLEEP) {
     const uint8_t cmd[] = {0x55, 0xAA, 0x01};
     Serial.println("Start BDBG-09");
 

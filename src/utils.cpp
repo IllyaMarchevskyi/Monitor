@@ -90,11 +90,13 @@ void pre_transmission_main() { digitalWrite(RS485_DIR_PIN, HIGH); }
 void post_transmission_main() { digitalWrite(RS485_DIR_PIN, LOW); }
 
 void collectAndAverageEveryMinute() {
-  if (!time_guard_allow("sec-tick", 1000))
-    return;
+  // if (!time_guard_allow("sec-tick", 1000, true))
+  //   return;
 
   arrSumPeriodicUpdate();
   acc_count++;
+  Serial.print("Acc_count: ");
+  Serial.println(acc_count);
 
   if (acc_count >= SAMPLES_PER_MIN) {
     for (size_t index = 0; index < CH_COUNT; ++index) {

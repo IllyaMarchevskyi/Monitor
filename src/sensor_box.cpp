@@ -23,8 +23,8 @@ static void sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
 
 void poll_SensorBox_SensorZTS3008(bool &alive1, bool &alive2, bool &alive3,
                                   bool &alive4) {
-  if (!time_guard_allow("sensorbox", SernsorBoxTimeSleep, true))
-    return;
+  // if (!time_guard_allow("sensorbox", SernsorBoxTimeSleep, true))
+  //   return;
   read_TEMP_RH(service_t);
   pollAllSensorBoxes(alive2, alive4, alive3, alive4);
 }
@@ -44,6 +44,13 @@ static void read_TEMP_RH(uint32_t *mass) {
   int16_t t_raw_s = (int16_t)t_raw_u;
   mass[0] = t_raw_s / 10.0f;
   mass[1] = rh_raw / 10.0f;
+  Serial.print("TEMP: ");
+  Serial.println(t_raw_s);
+  Serial.println(mass[0]);
+  Serial.print("RH: ");
+  Serial.println(rh_raw);
+  Serial.println(mass[1]);
+
   rs485_release();
 }
 

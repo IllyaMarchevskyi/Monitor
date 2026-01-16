@@ -54,7 +54,7 @@ void drawData() {
 void drawOnlyValue() {
   int x;
   int y;
-  if (!time_guard_allow("draw/update", DRAW_MONITORING, true))
+  if (!time_guard_allow("draw/update", DRAW_TIME_SLEEP, true))
     return;
   for (uint16_t i = 0; i < labels_len; i++) {
     if (send_arr[i] != prev_send_arr[i]) {

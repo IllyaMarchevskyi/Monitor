@@ -42,7 +42,7 @@ void initEthernet() {
 
 // Public: POST to hostname
 bool httpPostSensors(const char *host, uint16_t port, const char *path) {
-  if (!time_guard_allow(path, SEND_DATA_TO_SERVER))
+  if (!time_guard_allow(path, SEND_DATA_TIME_SLEEP))
     return false;
 
   EthernetClient client;
@@ -55,7 +55,7 @@ bool httpPostSensors(const char *host, uint16_t port, const char *path) {
 
 // Public: POST to IP address
 bool httpPostSensors(const IPAddress &ip, uint16_t port, const char *path) {
-  if (!time_guard_allow(path, SEND_DATA_TO_SERVER))
+  if (!time_guard_allow(path, SEND_DATA_TIME_SLEEP))
     return false;
 
   EthernetClient client;

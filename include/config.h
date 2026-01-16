@@ -22,7 +22,11 @@ extern uint32_t radiation_uSvh;
 extern uint32_t service_t[];
 
 // ---------- Value Timers -------------
-constexpr uint32_t SernsorBoxTimeSleep = 0;
+constexpr uint32_t MONITOR_TIME_SLEEP = 1 * SEC;
+constexpr uint32_t BDBG_TIME_SLEEP  = 30 * SEC;
+constexpr uint32_t DRAW_TIME_SLEEP  = 1 * MIN;
+constexpr uint32_t RELAY_TIME_SLEEP  = 10 * MIN;
+constexpr uint32_t SEND_DATA_TIME_SLEEP  = 1 * MIN;
 
 // ---------- Pins ----------
 constexpr uint8_t RS485_DIR_PIN = 5; // DE/RE for RS-485 (Sensor Box)
@@ -101,12 +105,6 @@ constexpr uint8_t UNIT_ID = 12; // ID пристрою
 constexpr uint8_t CH = 0;       // Канал взаємодії від 0-3
 constexpr uint16_t RELAY_HTTP_PORT = 8080;
 constexpr uint32_t RELAY_PULSE_MS = 2 * MIN;
-
-// ---------- Periods / Timings (ms) ----------
-constexpr uint32_t BDBG_REQ_PERIOD_MS = 30 * SEC;
-constexpr uint32_t DRAW_MONITORING = 1 * MIN;
-constexpr uint32_t RELAY_SLEEP = 10 * MIN;
-constexpr uint32_t SEND_DATA_TO_SERVER = 1 * MIN;
 
 // ---------- Exported Data Array ----------
 constexpr int SEND_ARR_SIZE = 30;

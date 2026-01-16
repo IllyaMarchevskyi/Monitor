@@ -22,6 +22,7 @@
 bool alive2 = false, alive4 = false, alive6 = false, alive7 = false;
 
 static void initSerials();
+static void pollMonitoringData();
 
 void setup() {
   for (int i = 0; i < SEND_ARR_SIZE; i++)
@@ -47,15 +48,16 @@ void setup() {
 void loop() {
   uint32_t t1 = millis();
 
-  TIME_CALL("SensorBox and SensorZTS3008",
-            poll_SensorBox_SensorZTS3008(alive2, alive4, alive6, alive7));
+  // TIME_CALL("SensorBox and SensorZTS3008",
+  //           poll_SensorBox_SensorZTS3008(alive2, alive4, alive6, alive7));
 
-  // BDBG-09
-  if (!alive4) {
-    TIME_CALL("Radiation", pollRadiation());
-  }
+  // // BDBG-09
+  // if (!alive4) {
+  //   TIME_CALL("Radiation", pollRadiation());
+  // }
 
-  TIME_CALL("Work with data", collectAndAverageEveryMinute());
+  // TIME_CALL("Work with data", collectAndAverageEveryMinute());
+  TIME_CALL("Monitoring Data", pollMonitoringData());
   TIME_CALL("Modbus connect", modbusTcpServiceOnce());
   TIME_CALL("Drawing value on arduino", drawOnlyValue());
   TIME_CALL("Ralay", ensureNetOrRebootPort0());
@@ -77,4 +79,17 @@ static void initSerials() {
 
   Serial3.begin(SERIAL3_BAUD); // Sensor Box 8E1
   Serial3.setTimeout(10);
+}
+
+static void pollMonitoringData() {
+  if (!time_guard_allow('monitoring', MONITOR_TIME_SLEEP))
+    return;
+
+  poll_SensorBox_SensorZTS3008(alive2, alive4, alive6, alive7);
+
+  if (!alive4) {
+    pollRadiation();
+  }
+
+  collectAndAverageEveryMinute();
 }
