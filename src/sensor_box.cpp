@@ -15,9 +15,10 @@ static bool readHalfFloats(uint8_t id, float out[3], uint16_t startAddr,
 static bool readFloats(uint8_t id, float out[3], uint16_t startAddr,
                        uint16_t regCount);
 static bool readPM(uint8_t id, uint16_t startAddr, float &f0, float &f1);
+
 static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
                            bool byteSwap = false);
-static void sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
+static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
                        const uint8_t *data, size_t len,
                        uint16_t timeoutMs = 20);
 
@@ -26,7 +27,7 @@ void poll_SensorBox_SensorZTS3008(bool &alive1, bool &alive2, bool &alive3,
   // if (!time_guard_allow("sensorbox", SernsorBoxTimeSleep, true))
   //   return;
   read_TEMP_RH(service_t);
-  pollAllSensorBoxes(alive2, alive4, alive3, alive4);
+  pollAllSensorBoxes(alive1, alive2, alive3, alive4);
 }
 
 static void read_TEMP_RH(float *mass) {
@@ -117,11 +118,17 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     float v[8] = {0};
     uint8_t REQ[12] = {0};
     size_t len;
+    Serial.print("ID: ");
+    Serial.println(id);
+
 
     switch (id) {
     case 2:
-      if (!readHalfFloats(id, v, GAS_START_ADDR2, GAS_REG_COUNT2))
+      if (!readHalfFloats(id, v, GAS_START_ADDR2, GAS_REG_COUNT2)) {
+        Serial.println("id: " + String(id) + " | Not Found CO, SO2, NO2");
+        active_ids[i] = false;
         continue;
+      }
       Serial.print("ID: ");
       Serial.println(id);
       Serial.print("CO ");
@@ -137,7 +144,11 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       break;
     case 3:
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0035, /*qty*/ 4);
-      sendHexTCP(v, ip_3, port, REQ, len, time_sleep);
+      if (!sendHexTCP(v, ip_3, port, REQ, len, time_sleep)) {
+        Serial.println("id: " + String(id) + " | Not Found SO2, H2S");
+        active_ids[i] = false;
+        continue;
+      }
       Serial.print("ID: ");
       Serial.println(id);
       Serial.print("SO2 ");
@@ -149,14 +160,21 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       break;
     case 4:
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
-      sendHexTCP(v, ip_4, port, REQ, len, time_sleep);
+      if (!sendHexTCP(v, ip_4, port, REQ, len, time_sleep)) {
+        Serial.println("id: " + String(id) + " | Not Found CO");
+        active_ids[i] = false;
+        continue;
+      }
       Serial.print("CO ");
       Serial.println(v[0]);
       sensors_dec[0] = v[0]; // CO
       break;
     case 5:
-      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
+      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
+        Serial.println("id: " + String(id) + " | Not Found CO, SO2, NO2");
+        active_ids[i] = false;
         continue;
+      }
       Serial.print("ID: ");
       Serial.println(id);
       Serial.print("CO ");
@@ -170,8 +188,11 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[2] = v[2]; // NO2
       break;
     case 6:
-      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
+      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
+        Serial.println("id: " + String(id) + " | Not Found NO, H2S, O3");
+        active_ids[i] = false;
         continue;
+      }
       Serial.print("ID: ");
       Serial.println(id);
       Serial.print("NO ");
@@ -185,8 +206,11 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[5] = v[2]; // O3
       break;
     case 7:
-      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
+      if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
+        Serial.println("id: " + String(id) + " | Not Found NH3, H2S, O3");
+        active_ids[i] = false;
         continue;
+      }
       Serial.print("ID: ");
       Serial.println(id);
       Serial.print("NH3 ");
@@ -199,10 +223,14 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[4] = v[1]; // H2S
       sensors_dec[5] = v[2]; // O3
       break;
-    case 8:
+    case 8: {
       float NO = 0, NO2 = 0;
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
-      sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
+      if (!sendHexTCP(v, ip_8, port, REQ, len, time_sleep)) {
+        Serial.println("id: " + String(id) + " | Not Found NO, NO2, NH3");
+        active_ids[i] = false;
+        continue;
+      }
       NO = v[0];
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0037, /*qty*/ 2);
       sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
@@ -222,21 +250,39 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[6] = v[0]; // NH3
       break;
     }
+    case 10: {
+      float pm25 = 0, pm10 = 0;
+      if (!readPM(PM_ID, PM_START_ADDR, pm25, pm10)) {
+        Serial.println("id: " + String(id) + " | Not Found PM25, PM10");
+        active_ids[i] = false;
+        continue;
+      }
+      Serial.print("PM25 ");
+      Serial.println(pm25 / pm_divider);
+      Serial.print("PM10 ");
+      Serial.println(pm10 / pm_divider);
+      sensors_dec[7] = pm25 / pm_divider;
+      sensors_dec[8] = pm10 / pm_divider;
+      break;
+    }
+    }
+    Serial.println("test10");
+    active_ids[i] = true;
     memset(REQ, 0, sizeof(REQ));
   }
 
-  float pm25 = 0, pm10 = 0;
-  if (readPM(PM_ID, PM_START_ADDR, pm25, pm10)) {
+  // float pm25 = 0, pm10 = 0;
+  // if (readPM(PM_ID, PM_START_ADDR, pm25, pm10)) {
 
-    Serial.print("PM25 ");
-    Serial.println(pm25 / pm_divider);
-    Serial.print("PM10 ");
-    Serial.println(pm10 / pm_divider);
-    sensors_dec[7] = pm25 / pm_divider;
-    sensors_dec[8] = pm10 / pm_divider;
-  } else {
-    Serial.println("Not Found PM25, PM10");
-  }
+  //   Serial.print("PM25 ");
+  //   Serial.println(pm25 / pm_divider);
+  //   Serial.print("PM10 ");
+  //   Serial.println(pm10 / pm_divider);
+  //   sensors_dec[7] = pm25 / pm_divider;
+  //   sensors_dec[8] = pm10 / pm_divider;
+  // } else {
+  //   Serial.println("Not Found PM25, PM10");
+  // }
 }
 
 static inline float floatFromWords(uint16_t high_word, uint16_t low_word) {
@@ -341,11 +387,11 @@ static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
   return f;
 }
 
-static void sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
+static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
                        const uint8_t *data, size_t len, uint16_t timeoutMs) {
   EthernetClient client;
   if (!pingId_Ethernet(ip, port, timeoutMs))
-    return;
+    return false;
   client.connect(ip, port);
 
   size_t sent = client.write(data, len);
@@ -376,4 +422,6 @@ static void sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
   if (got)
     printHex(resp, got);
   Serial.println(F("----------------------"));
+
+  return true;
 }

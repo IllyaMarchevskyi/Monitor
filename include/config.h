@@ -43,6 +43,8 @@ constexpr uint32_t BDBG_FIRST_BYTE_TIMEOUT_MS = 500;
 constexpr uint32_t BDBG_INTERBYTE_TIMEOUT_MS = 50;
 
 // ---------- Sensor Box (Modbus RTU) ----------
+extern bool active_ids[6];
+
 // Primary/extra device IDs
 extern const uint8_t PRIMARY_IDS[];
 extern const uint8_t PRIMARY_COUNT;

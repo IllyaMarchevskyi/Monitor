@@ -19,7 +19,7 @@
 #include "sensor_box.h"
 #include "utils.h"
 
-bool alive2 = false, alive4 = false, alive6 = false, alive7 = false;
+bool alive2 = false, alive4 = true, alive6 = false, alive7 = false;
 
 static void initSerials();
 static void pollMonitoringData();
@@ -59,7 +59,7 @@ void loop() {
   // TIME_CALL("Work with data", collectAndAverageEveryMinute());
   TIME_CALL("Monitoring Data", pollMonitoringData());
   TIME_CALL("Modbus connect", modbusTcpServiceOnce());
-  TIME_CALL("Drawing value on arduino", drawOnlyValue());
+  TIME_CALL("Drawing value on arduino", drawValue(alive2, alive4, alive6, alive7));
   TIME_CALL("Ralay", ensureNetOrRebootPort0());
   TIME_CALL("Send to Server1",
             httpPostSensors(SERVER_IP, server_port, "/ingest"));
