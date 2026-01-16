@@ -18,7 +18,8 @@ static bool readPM(uint8_t id, uint16_t startAddr, float &f0, float &f1);
 static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
                            bool byteSwap = false);
 static void sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
-                       const uint8_t *data, size_t len, uint16_t timeoutMs = 20);
+                       const uint8_t *data, size_t len,
+                       uint16_t timeoutMs = 20);
 
 void poll_SensorBox_SensorZTS3008(bool &alive1, bool &alive2, bool &alive3,
                                   bool &alive4) {
@@ -49,18 +50,22 @@ static void read_TEMP_RH(uint32_t *mass) {
 static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
                                bool &alive4) {
   // 1) Ping primary IDs
+  bool enable_alives = alive1 || alive2 || alive3 || alive4;
   for (uint8_t i = 0; i < PRIMARY_COUNT; ++i) {
-    uint8_t id = PRIMARY_IDS[i];
-    bool ok = (id == PRIMARY_IDS[1]) ? pingId_Ethernet(ip_4, port, time_sleep)
-                                     : pingId(id);
-    if (id == PRIMARY_IDS[0])
-      alive1 = ok;
-    else if (id == PRIMARY_IDS[1])
-      alive2 = ok;
-    else if (id == PRIMARY_IDS[2])
-      alive3 = ok;
-    else if (id == PRIMARY_IDS[3])
-      alive4 = ok;
+
+    if (!enable_alives) {
+      uint8_t id = PRIMARY_IDS[i];
+      bool ok = (id == PRIMARY_IDS[1]) ? pingId_Ethernet(ip_4, port, time_sleep)
+                                       : pingId(id);
+      if (id == PRIMARY_IDS[0])
+        alive1 = ok;
+      else if (id == PRIMARY_IDS[1])
+        alive2 = ok;
+      else if (id == PRIMARY_IDS[2])
+        alive3 = ok;
+      else if (id == PRIMARY_IDS[3])
+        alive4 = ok;
+    }
   }
 
   Serial.print("ID");
@@ -103,8 +108,11 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
   for (uint8_t i = 0; i < nPoll; ++i) {
     uint8_t id = toPoll[i];
     float v[8] = {0};
+    uint8_t REQ[12] = {0};
+    size_t len;
 
-    if (id == 2) {
+    switch (id) {
+    case 2:
       if (!readHalfFloats(id, v, GAS_START_ADDR2, GAS_REG_COUNT2))
         continue;
       Serial.print("ID: ");
@@ -119,10 +127,9 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[1] = v[3] / so2_no2_divider; // SO2
       sensors_dec[2] = v[5] / so2_no2_divider; // NO2
       // sensors_dec[4] = v[3]; // H2S
-    } else if (id == 3) {
-      uint8_t REQ[12] = {0};
-      size_t len =
-          buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0035, /*qty*/ 4);
+      break;
+    case 3:
+      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0035, /*qty*/ 4);
       sendHexTCP(v, ip_3, port, REQ, len, time_sleep);
       Serial.print("ID: ");
       Serial.println(id);
@@ -132,15 +139,15 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       Serial.println(v[1]);
       sensors_dec[1] = v[0]; // SO2
       sensors_dec[4] = v[1]; // H2S
-    } else if (id == 4) {
-      uint8_t REQ[12] = {0};
-      size_t len =
-          buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
+      break;
+    case 4:
+      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
       sendHexTCP(v, ip_4, port, REQ, len, time_sleep);
       Serial.print("CO ");
       Serial.println(v[0]);
       sensors_dec[0] = v[0]; // CO
-    } else if (id == 5) {
+      break;
+    case 5:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
         continue;
       Serial.print("ID: ");
@@ -154,7 +161,8 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[0] = v[0]; // CO
       sensors_dec[1] = v[1]; // SO2
       sensors_dec[2] = v[2]; // NO2
-    } else if (id == 6) {
+      break;
+    case 6:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
         continue;
       Serial.print("ID: ");
@@ -168,7 +176,8 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[3] = v[0]; // NO
       sensors_dec[4] = v[1]; // H2S
       sensors_dec[5] = v[2]; // O3
-    } else if (id == 7) {
+      break;
+    case 7:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT))
         continue;
       Serial.print("ID: ");
@@ -182,11 +191,10 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[6] = v[0]; // NH3
       sensors_dec[4] = v[1]; // H2S
       sensors_dec[5] = v[2]; // O3
-    } else if (id == 8) {
+      break;
+    case 8:
       float NO = 0, NO2 = 0;
-      uint8_t REQ[12] = {0};
-      size_t len =
-          buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
+      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
       sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
       NO = v[0];
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0037, /*qty*/ 2);
@@ -205,7 +213,9 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[3] = NO;   // NO
       sensors_dec[2] = NO2;  // NO2
       sensors_dec[6] = v[0]; // NH3
+      break;
     }
+    memset(REQ, 0, sizeof(REQ));
   }
 
   float pm25 = 0, pm10 = 0;
@@ -300,7 +310,7 @@ static bool readPM(uint8_t id, uint16_t startAddr, float &f0, float &f1) {
 }
 
 static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
-                           bool byteSwap = false) {
+                           bool byteSwap) {
   uint8_t b[4] = {p[0], p[1], p[2], p[3]};
   if (wordSwap) {
     uint8_t t0 = b[0], t1 = b[1];

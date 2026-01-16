@@ -4,8 +4,8 @@
 
 TFT_eSPI tft;
 
-static uint32_t prev_send_arr[31] = {0};
-const uint16_t len_prev_send_arr =
+static float prev_send_arr[31] = {0};
+const int len_prev_send_arr =
     sizeof(prev_send_arr) / sizeof(prev_send_arr[0]);
 
 static String macToString(const uint8_t mac[6]);
@@ -57,7 +57,7 @@ void drawData() {
 void drawOnlyValue() {
   int x;
   int y;
-  if (!time_guard_allow("draw/update", DRAW_MONITORING))
+  if (!time_guard_allow("draw/update", DRAW_MONITORING, true))
     return;
   for (uint16_t i = 0; i < labels_len; i++) {
     if (send_arr[i] != prev_send_arr[i]) {

@@ -21,6 +21,7 @@
 #ifndef ethernet_h_
 #define ethernet_h_
 
+#define TIMEOUT_WAIT 150
 // All symbols exposed to Arduino sketches are contained in this header file
 //
 // Older versions had much of this stuff in EthernetClient.h, EthernetServer.h,
@@ -213,8 +214,8 @@ public:
 
 class EthernetClient : public Client {
 public:
-	EthernetClient() : _sockindex(MAX_SOCK_NUM), _timeout(1000) { }
-	EthernetClient(uint8_t s) : _sockindex(s), _timeout(1000) { }
+	EthernetClient() : _sockindex(MAX_SOCK_NUM), _timeout(TIMEOUT_WAIT) { }
+	EthernetClient(uint8_t s) : _sockindex(s), _timeout(TIMEOUT_WAIT) { }
 	virtual ~EthernetClient() {};
 
 	uint8_t status();

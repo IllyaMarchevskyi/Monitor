@@ -34,6 +34,7 @@ Arduino library for communicating with Modbus slaves over RS232/485 (via RTU pro
   
 #ifndef ModbusMaster_h
 #define ModbusMaster_h
+#define TIMEOUT_WAIT 150
 
 
 /**
@@ -249,7 +250,7 @@ class ModbusMaster
     static const uint8_t ku8MBReadWriteMultipleRegisters = 0x17; ///< Modbus function 0x17 Read Write Multiple Registers
     
     // Modbus timeout [milliseconds]
-    static const uint16_t ku16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]
+    static const uint16_t ku16MBResponseTimeout          = TIMEOUT_WAIT; ///< Modbus timeout [milliseconds]
     
     // master function that conducts Modbus transactions
     uint8_t ModbusMasterTransaction(uint8_t u8MBFunction);

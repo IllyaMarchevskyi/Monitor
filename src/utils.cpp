@@ -8,10 +8,10 @@ static void sendArrPeriodicUpdate();
 static uint16_t tmp_id_value = 0;
 static uint16_t acc_count = 0;
 
-static uint32_t acc_sum[CH_COUNT] = {0};
-static uint32_t acc_sq_sum[CH_COUNT] = {0};
-static uint32_t channel_avg[CH_COUNT] = {0};
-static uint32_t channel_std[CH_COUNT] = {0};
+static float acc_sum[CH_COUNT] = {0};
+static float acc_sq_sum[CH_COUNT] = {0};
+static float channel_avg[CH_COUNT] = {0};
+static float channel_std[CH_COUNT] = {0};
 
 static volatile bool g_rs485_busy = false;
 static _TimeGuardEntry _tg_entries[8];

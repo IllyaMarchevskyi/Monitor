@@ -3,6 +3,10 @@
 #include <Arduino.h>
 #include <Ethernet.h> // дає IPAddress та byte
 
+// ######### VERSION #########
+#define VERSION "1.1.3"
+// ###########################
+
 // ---------- Helpers ----------
 #ifndef ARRLEN
 #define ARRLEN(a) (sizeof(a) / sizeof((a)[0]))

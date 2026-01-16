@@ -11,17 +11,20 @@ static uint32_t bdbg_first_deadline = 0;
 static bool bdbg_waiting = false;
 static bool bdbg_has_data = false;
 
-static void bdbg_print_hex(const uint8_t *p, size_t n) {
-  for (size_t i = 0; i < n; i++) {
-    if (p[i] < 0x10)
-      Serial.print('0');
-    Serial.print(p[i], HEX);
-    Serial.print(' ');
+static void bdbgPeriodicRequest();
+static void bdbgFeedByte(uint8_t b);
+static void bdbgTryFinalizeFrame();
+static void bdbg_print_hex(const uint8_t *p, size_t n);
+
+void pollRadiation() {
+  bdbgPeriodicRequest();
+  while (Serial2.available()) {
+    bdbgFeedByte(Serial2.read());
   }
-  Serial.println();
+  bdbgTryFinalizeFrame();
 }
 
-void bdbgPeriodicRequest() {
+static void bdbgPeriodicRequest() {
   if (millis() - bdbg_last_req >= BDBG_REQ_PERIOD_MS) {
     const uint8_t cmd[] = {0x55, 0xAA, 0x01};
     Serial.println("Start BDBG-09");
@@ -51,7 +54,7 @@ void bdbgPeriodicRequest() {
   }
 }
 
-void bdbgFeedByte(uint8_t b) {
+static void bdbgFeedByte(uint8_t b) {
   if (bdbg_idx < sizeof(bdbg_buf)) {
     bdbg_buf[bdbg_idx++] = b;
   }
@@ -59,7 +62,7 @@ void bdbgFeedByte(uint8_t b) {
   bdbg_last_byte = millis();
 }
 
-void bdbgTryFinalizeFrame() {
+static void bdbgTryFinalizeFrame() {
   if (!bdbg_waiting)
     return;
 
@@ -93,4 +96,14 @@ void bdbgTryFinalizeFrame() {
     bdbg_waiting = false;
     Serial.println("Finish BDBG-09");
   }
+}
+
+static void bdbg_print_hex(const uint8_t *p, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    if (p[i] < 0x10)
+      Serial.print('0');
+    Serial.print(p[i], HEX);
+    Serial.print(' ');
+  }
+  Serial.println();
 }

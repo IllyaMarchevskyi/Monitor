@@ -1,8 +1,3 @@
-
-// ######### VERSION #########
-#define VERSION "1.1.3"
-// ###########################
-
 /*
   Environmental Station — Refactored Main
   Modules:
@@ -27,7 +22,6 @@
 bool alive2 = false, alive4 = false, alive6 = false, alive7 = false;
 
 static void initSerials();
-
 
 void setup() {
   for (int i = 0; i < SEND_ARR_SIZE; i++)
@@ -58,11 +52,7 @@ void loop() {
 
   // BDBG-09
   if (!alive4) {
-    bdbgPeriodicRequest();
-    while (Serial2.available()) {
-      bdbgFeedByte(Serial2.read());
-    }
-    bdbgTryFinalizeFrame();
+    TIME_CALL("Radiation", pollRadiation());
   }
 
   TIME_CALL("Work with data", collectAndAverageEveryMinute());
