@@ -5,9 +5,6 @@
 TFT_eSPI tft;
 
 static float prev_send_arr[31] = {0};
-const int len_prev_send_arr =
-    sizeof(prev_send_arr) / sizeof(prev_send_arr[0]);
-
 static String macToString(const uint8_t mac[6]);
 static void drawFooter();
 static void readEepromMac(uint8_t out[6]);
