@@ -12,6 +12,7 @@ static bool macValid(const uint8_t b[6]);
 static bool macValid(const uint8_t b[6]);
 
 void initDisplay() {
+  bool t1 =true; bool t2 = false; bool t3 = false; bool t4 = false;
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
@@ -19,6 +20,7 @@ void initDisplay() {
   tft.setTextSize(2);
   drawData();
   drawFooter();
+  drawWorkIds(t1, t2, t3, t4);
 }
 
 void drawData() {
@@ -153,6 +155,7 @@ static void readEepromMac(uint8_t out[6]) {
   for (int i = 0; i < 6; ++i)
     out[i] = EEPROM.read(0 + i);
 }
+
 static bool macValid(const uint8_t b[6]) {
   bool allFF = true, all00 = true;
   for (int i = 0; i < 6; ++i) {
@@ -170,4 +173,32 @@ static bool macValid(const uint8_t b[6]) {
     return false;
   }
   return true;
+}
+
+void drawWorkIds(bool &alive1, bool &alive2, bool &alive3, bool &alive4){
+  const int h = tft.height();
+  const int bar_h = 20;
+  const int bar_w = 60;
+  const uint8_t *ids = nullptr;
+  size_t ids_len = 0;
+
+  if (alive1) { ids = EXTRA_IF_ONLY2; ids_len = EXTRA_ONLY2_CNT; }
+  else if (alive2) { ids = EXTRA_IF_ONLY4; ids_len = EXTRA_ONLY4_CNT; }
+  else if (alive3) { ids = EXTRA_IF_ONLY6; ids_len = EXTRA_ONLY6_CNT; }
+  else if (alive4) { ids = EXTRA_IF_ONLY7; ids_len = EXTRA_ONLY7_CNT; }
+  else { ids = nullptr; ids_len = 0; }
+
+
+  bool work_ids_mass[6] = {false, false, false, false, false, false};
+
+  tft.drawString("ID |", 2, h - bar_h*2);
+  for (size_t i = 0; i < ids_len; i++) {
+    uint8_t id = ids[i];
+    const char* st = work_ids_mass[i] ? "1" : "0";
+
+    tft.drawString(String(id) + ":" + st, 60 + 2 + bar_w * i, h - bar_h * 2);
+  }
+
+  
+
 }

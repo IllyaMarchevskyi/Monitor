@@ -4,7 +4,7 @@
 #include <Ethernet.h> // дає IPAddress та byte
 
 // ######### VERSION #########
-#define VERSION "1.1.3"
+#define VERSION "1.1.4"
 // ###########################
 
 // ---------- Helpers ----------
