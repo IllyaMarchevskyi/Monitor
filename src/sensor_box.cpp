@@ -46,10 +46,10 @@ static void read_TEMP_RH(float *mass) {
   mass[1] = rh_raw / 10.0f;
   Serial.print("TEMP: ");
   Serial.println(t_raw_s);
-  Serial.println(mass[0]);
+  Serial.println(service_t[0]);
   Serial.print("RH: ");
   Serial.println(rh_raw);
-  Serial.println(mass[1]);
+  Serial.println(service_t[1]);
 
   rs485_release();
 }

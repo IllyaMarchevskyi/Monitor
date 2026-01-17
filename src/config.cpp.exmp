@@ -1,19 +1,19 @@
 #include "config.h"
 
-double send_arr[SEND_ARR_SIZE + 1] = {0};
-uint32_t sensors_dec[9] = {
-    0}; // [CO, SO2, NO2, NO, H2S, O3, NH3, PM_2.5, PM_10]
-uint32_t radiation_uSvh = 0.0f; // radiation
-uint32_t service_t[2] = {0};    // temperature, dampness
-
+double send_arr[SEND_ARR_SIZE] = {0};
+float sensors_dec[9] = {0};  // [CO, SO2, NO2, NO, H2S, O3, NH3, PM_2.5, PM_10]
+float radiation_uSvh = 0.0f; // radiation
+float service_t[2] = {0};    // temperature, dampness
 // ---------- Sensor Box (Modbus RTU) ----------
+bool active_ids[6] = {false, false, false, false, false, false};
+
 const uint8_t PRIMARY_IDS[] = {2, 4, 6, 7};
 const uint8_t PRIMARY_COUNT = ARRLEN(PRIMARY_IDS);
 
-const uint8_t EXTRA_IF_ONLY2[] = {2, 5};
-const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8};
-const uint8_t EXTRA_IF_ONLY6[] = {6, 5};
-const uint8_t EXTRA_IF_ONLY7[] = {7, 5};
+const uint8_t EXTRA_IF_ONLY2[] = {2, 5, 10};
+const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8, 10};
+const uint8_t EXTRA_IF_ONLY6[] = {6, 5, 10};
+const uint8_t EXTRA_IF_ONLY7[] = {7, 5, 10};
 
 const uint8_t EXTRA_ONLY2_CNT = ARRLEN(EXTRA_IF_ONLY2);
 const uint8_t EXTRA_ONLY4_CNT = ARRLEN(EXTRA_IF_ONLY4);
