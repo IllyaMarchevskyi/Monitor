@@ -118,8 +118,6 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     float v[8] = {0};
     uint8_t REQ[12] = {0};
     size_t len;
-    Serial.print("ID: ");
-    Serial.println(id);
 
 
     switch (id) {
@@ -266,7 +264,6 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       break;
     }
     }
-    Serial.println("test10");
     active_ids[i] = true;
     memset(REQ, 0, sizeof(REQ));
   }

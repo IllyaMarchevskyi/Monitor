@@ -6,6 +6,8 @@ TFT_eSPI tft;
 
 static const uint8_t *ids = nullptr;
 static size_t ids_len = 0;
+static bool no_repeate_active_ids[6] = {false, false, false,
+                                        false, false, false};
 
 static float prev_send_arr[31] = {0};
 static String macToString(const uint8_t mac[6]);
@@ -14,7 +16,6 @@ static void readEepromMac(uint8_t out[6]);
 static bool macValid(const uint8_t b[6]);
 static bool macValid(const uint8_t b[6]);
 static void drawWorkIds(bool &alive1, bool &alive2, bool &alive3, bool &alive4);
-static void drawOnlyValuesIds();
 static void drawData();
 static void drawOnlyValue();
 
@@ -40,10 +41,7 @@ void drawValue(bool &alive1, bool &alive2, bool &alive3, bool &alive4) {
   drawOnlyValue();
   if (!ids) {
     drawWorkIds(alive1, alive2, alive3, alive4);
-    drawOnlyValuesIds();
     return;
-  } else {
-    drawOnlyValuesIds();
   }
 }
 
@@ -107,6 +105,7 @@ static void drawOnlyValue() {
 static void drawWorkIds(bool &alive1, bool &alive2, bool &alive3,
                         bool &alive4) {
   const int h = tft.height();
+  const int w = tft.width();
   const int bar_h = 20;
   const int bar_w = 60;
 
@@ -126,17 +125,23 @@ static void drawWorkIds(bool &alive1, bool &alive2, bool &alive3,
     ids = nullptr;
     ids_len = 0;
   }
+  tft.fillRect(0, h - bar_h*2, w, bar_h, TFT_BLACK);
 
   tft.drawString("ID |", 2, h - bar_h * 2);
+  if (ids == nullptr && ids_len == 0) {
+    tft.drawString("NO ANSWER", 62, h - bar_h * 2);
+  }
+
   for (size_t i = 0; i < ids_len; i++) {
     uint8_t id = ids[i];
     const char *st = active_ids[i] ? "1" : "0";
-
-    tft.drawString(String(id) + ":" + st, 60 + 2 + bar_w * i, h - bar_h * 2);
+    tft.drawString(String(id) + ":" + st, 62 + bar_w * i, h - bar_h * 2);
+    no_repeate_active_ids[i] = active_ids[i];
   }
 }
 
-static void drawOnlyValuesIds() {
+void drawOnlyValuesIds() {
+  if (!ids) return;
   const int h = tft.height();
   const int bar_h = 20;
   const int bar_w = 60;
@@ -144,11 +149,16 @@ static void drawOnlyValuesIds() {
   for (size_t i = 0; i < ids_len; i++) {
     uint8_t id = ids[i];
     const char *st = active_ids[i] ? "1" : "0";
+    if (no_repeate_active_ids[i] == active_ids[i]) {
+      continue;
+    }
+
     if (id < 10) {
       tft.drawString(st, 82 + 2 + bar_w * i, h - bar_h * 2);
     } else {
       tft.drawString(st, 82 + 2 + 12 + bar_w * i, h - bar_h * 2);
     }
+    no_repeate_active_ids[i] = active_ids[i];
   }
 }
 

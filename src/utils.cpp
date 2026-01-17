@@ -150,8 +150,6 @@ static void arrSumPeriodicUpdate() {
   }
 
   // Radiation and service (no meteo)
-  Serial.print(String(i) + " ");
-  Serial.println(service_t[i]);
   acc_sum[i] += radiation_uSvh;
   acc_sq_sum[i] += radiation_uSvh * radiation_uSvh;
   ++i;

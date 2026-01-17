@@ -19,7 +19,7 @@
 #include "sensor_box.h"
 #include "utils.h"
 
-bool alive2 = false, alive4 = true, alive6 = false, alive7 = false;
+bool alive2 = false, alive4 = false, alive6 = false, alive7 = false;
 
 static void initSerials();
 static void pollMonitoringData();
@@ -91,4 +91,5 @@ static void pollMonitoringData() {
   }
 
   collectAndAverageEveryMinute();
+  drawOnlyValuesIds();
 }

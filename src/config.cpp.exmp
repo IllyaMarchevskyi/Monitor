@@ -4,6 +4,9 @@ double send_arr[SEND_ARR_SIZE] = {0};
 float sensors_dec[9] = {0};  // [CO, SO2, NO2, NO, H2S, O3, NH3, PM_2.5, PM_10]
 float radiation_uSvh = 0.0f; // radiation
 float service_t[2] = {0};    // temperature, dampness
+
+const size_t sensors_dec_cnt = ARRLEN(sensors_dec);
+const size_t service_t_cnt = ARRLEN(service_t);
 // ---------- Sensor Box (Modbus RTU) ----------
 bool active_ids[6] = {false, false, false, false, false, false};
 

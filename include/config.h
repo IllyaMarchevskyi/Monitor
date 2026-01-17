@@ -21,6 +21,8 @@ extern float sensors_dec[];
 extern float radiation_uSvh;
 extern float service_t[];
 
+extern const size_t sensors_dec_cnt;
+extern const size_t service_t_cnt;
 // ---------- Value Timers -------------
 constexpr uint32_t MONITOR_TIME_SLEEP = 1 * SEC;
 constexpr uint32_t BDBG_TIME_SLEEP  = 30 * SEC;
