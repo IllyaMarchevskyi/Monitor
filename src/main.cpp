@@ -25,8 +25,7 @@ static void initSerials();
 static void pollMonitoringData();
 
 void setup() {
-  for (int i = 0; i < SEND_ARR_SIZE; i++)
-    send_arr[i] = DEFAULT_SEND_VAL;
+  fill(send_arr, SEND_ARR_SIZE , DEFAULT_SEND_VAL);
 
   initDisplay();
   Serial.begin(SERIAL0_BAUD);

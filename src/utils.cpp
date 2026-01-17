@@ -101,15 +101,16 @@ void collectAndAverageEveryMinute() {
   if (acc_count >= SAMPLES_PER_MIN) {
     for (size_t index = 0; index < CH_COUNT; ++index) {
       float sampleCount = (acc_count == 0) ? 1.0f : (float)acc_count;
-      float avg = acc_sum[index] / sampleCount;
-      channel_avg[index] = avg; // середнє за хвилину
+      float avg = acc_sum[index] / sampleCount; // середнє за хвилину
+      channel_avg[index] = avg;
 
       float variance = 0.0f;
+      // Вибіркова дисперсія (acc_sq_sum - n*avg^2)/(n-1)
       if (sampleCount > 1.0f) {
         variance = (acc_sq_sum[index] - sampleCount * avg * avg) /
                    (sampleCount - 1.0f);
-        if (variance < 0.0f)
-          variance = 0.0f;
+        // if (variance < 0.0f)
+        //   variance = 0.0f;
       }
       channel_std[index] = sqrtf(variance);
 
@@ -127,8 +128,9 @@ void collectAndAverageEveryMinute() {
 
 static void rebuildSendArrayFromLabels() {
   size_t used = labels_len;
-  if (used > SEND_ARR_SIZE)
+  if (used > SEND_ARR_SIZE) {
     used = SEND_ARR_SIZE;
+  }
   for (size_t i = 0; i < used; ++i) {
     float value = DEFAULT_SEND_VAL;
     ChannelIndex channel = labels[i].channel;
@@ -138,83 +140,27 @@ static void rebuildSendArrayFromLabels() {
     }
     send_arr[i] = value;
   }
-  for (size_t i = used; i < SEND_ARR_SIZE; ++i) {
-    send_arr[i] = DEFAULT_SEND_VAL;
-  }
 }
 
-// uint32_t time_guard_remaining(const char *key, uint32_t interval_ms) {
-//   uint32_t now = millis();
-//   for (int i = 0; i < (int)(sizeof(_tg_entries) / sizeof(_tg_entries[0]));
-//        ++i) {
-//     if (_tg_entries[i].key[0] == '\0')
-//       continue;
-//     if (strcmp(_tg_entries[i].key, key) == 0) {
-//       uint32_t elapsed = now - _tg_entries[i].last_ms;
-//       if (elapsed >= interval_ms)
-//         return 0;
-//       return interval_ms - elapsed;
-//     }
-//   }
-//   return 0;
-// }
-
 static void arrSumPeriodicUpdate() {
-
-  acc_sum[0] += sensors_dec[0]; // CO
-  acc_sq_sum[0] += sensors_dec[0] * sensors_dec[0];
-
-  acc_sum[1] += sensors_dec[1]; // SO2
-  acc_sq_sum[1] += sensors_dec[1] * sensors_dec[1];
-
-  acc_sum[2] += sensors_dec[2]; // NO2
-  acc_sq_sum[2] += sensors_dec[2] * sensors_dec[2];
-
-  acc_sum[3] += sensors_dec[3]; // NO
-  acc_sq_sum[3] += sensors_dec[3] * sensors_dec[3];
-
-  acc_sum[4] += sensors_dec[4]; // H2S
-  acc_sq_sum[4] += sensors_dec[4] * sensors_dec[4];
-
-  acc_sum[5] += sensors_dec[5]; // O3
-  acc_sq_sum[5] += sensors_dec[5] * sensors_dec[5];
-
-  acc_sum[6] += sensors_dec[6]; // NH3
-  acc_sq_sum[6] += sensors_dec[6] * sensors_dec[6];
-
-  acc_sum[7] += sensors_dec[7]; // PM_2.5
-  acc_sq_sum[7] += sensors_dec[7] * sensors_dec[7];
-
-  acc_sum[8] += sensors_dec[8]; // PM_10
-  acc_sq_sum[8] += sensors_dec[8] * sensors_dec[8];
+  uint8_t i = 0;
+  for (int index = 0; index < sensors_dec_cnt; ++i, ++index) {
+    acc_sum[i] += sensors_dec[index];
+    acc_sq_sum[i] += sensors_dec[index] * sensors_dec[index];
+  }
 
   // Radiation and service (no meteo)
-  acc_sum[9] += radiation_uSvh;
-  acc_sq_sum[9] += radiation_uSvh * radiation_uSvh;
-
-  acc_sum[10] += service_t[0];
-  acc_sq_sum[10] += service_t[0] * service_t[0];
-
-  acc_sum[11] += service_t[1];
-  acc_sq_sum[11] += service_t[1] * service_t[1];
-
-  //   for (size_t i = 0; i < CH_COUNT; ++i) {
-  //   float value = INIT_SEND_ARR_0_13[i][tmp_id_value%6];
-  //   acc_sum[i] += value;  // double -> float ок
-  //   acc_sq_sum[i] += value * value;
-  // }
-
-  // for(int id=0; id<labels_len; id++)
-  // {
-  //   Serial.print(labels[id]);
-  //   Serial.print(": ");
-  //   Serial.print("acc_sum");
-  //   Serial.print('[');
-  //   Serial.print(id);
-  //   Serial.print("]=");
-  //   Serial.print(acc_sum[id]);
-  //   Serial.println(';');
-  // }
+  Serial.print(String(i) + " ");
+  Serial.println(service_t[i]);
+  acc_sum[i] += radiation_uSvh;
+  acc_sq_sum[i] += radiation_uSvh * radiation_uSvh;
+  ++i;
+  // acc_sum[9] += radiation_uSvh;
+  // acc_sq_sum[9] += radiation_uSvh * radiation_uSvh;
+  for (int index = 0; index < service_t_cnt; ++i, ++index) {
+    acc_sum[i] += service_t[index];
+    acc_sq_sum[i] += service_t[index] * service_t[index];
+  }
 }
 
 // ============================== send_arr Maintenance ========================

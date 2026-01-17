@@ -45,3 +45,9 @@ void printHex(const uint8_t *b, size_t n);
 void pre_transmission_main();
 void post_transmission_main();
 void collectAndAverageEveryMinute();
+
+template <typename T>
+void fill(T *mass, size_t count, T value) {
+  for (size_t i = 0; i < count; ++i)
+    mass[i] = value;
+}

@@ -109,8 +109,8 @@ constexpr uint16_t RELAY_HTTP_PORT = 8080;
 constexpr uint32_t RELAY_PULSE_MS = 2 * MIN;
 
 // ---------- Exported Data Array ----------
-constexpr int SEND_ARR_SIZE = 30;
-constexpr float DEFAULT_SEND_VAL = -1.0f;
+constexpr int SEND_ARR_SIZE = 31;
+constexpr double DEFAULT_SEND_VAL = -1.0;
 
 // ---------- Display Parameters ----------
 constexpr int col1_x = 0, col1_x_value = 80;
