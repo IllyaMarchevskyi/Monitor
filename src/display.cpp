@@ -126,7 +126,7 @@ static void drawWorkIds(bool &alive1, bool &alive2, bool &alive3,
     ids = nullptr;
     ids_len = 0;
   }
-  tft.fillRect(0, h - bar_h*2, w, bar_h, TFT_BLACK);
+  tft.fillRect(62, h - bar_h*2, w, bar_h, TFT_BLACK);
 
   tft.drawString("ID |", 2, h - bar_h * 2);
   if (ids == nullptr && ids_len == 0) {
