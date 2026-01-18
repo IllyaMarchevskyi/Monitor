@@ -5,14 +5,11 @@
 EthernetClient client;
 
 void streamLogData() {
-  client = serial_server.available();
+  if (!client || !client.connected()) {
+    client = serial_server.accept();
+  }
+
   if (!client || !client.connected()) {
     return;
   }
-
-  if (!client.connected() && client.available() == 0) {
-    return;
-  }
 }
-
-

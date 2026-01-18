@@ -1,3 +1,5 @@
+#pragma once
+#include <Arduino.h>
 #include <Ethernet.h>
 
 extern EthernetClient client;

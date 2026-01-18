@@ -4,7 +4,7 @@
 #include "serial.h"
 
 EthernetServer modbus_server(MODBUS_TCP_PORT);
-EthernetServer serial_server(MODBUS_TCP_PORT);
+EthernetServer serial_server(SERIAL_TCP_PORT);
 
 static inline bool mac_valid(const uint8_t *m);
 static String macToStringLocal(const uint8_t mac[6]);
@@ -35,6 +35,7 @@ void initEthernet() {
     Ethernet.begin(mac, STATIC_IP, GETWAY);
   }
   modbus_server.begin();
+  serial_server.begin();
   logLine("Modbus modbus_server on ", false);
   logLine(Ethernet.localIP(), true);
   logLine("0=NoHardware, 1=W5100, 2=W5200, 3=W5500", true);

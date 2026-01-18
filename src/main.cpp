@@ -59,6 +59,7 @@ void loop() {
   // TIME_CALL("Work with data", collectAndAverageEveryMinute());
   TIME_CALL("Monitoring Data", pollMonitoringData());
   TIME_CALL("Modbus connect", modbusTcpServiceOnce());
+  TIME_CALL("Serial Server", streamLogData());
   TIME_CALL("Drawing value on arduino",
             drawValue(alive2, alive4, alive6, alive7));
   TIME_CALL("Ralay", ensureNetOrRebootPort0());
