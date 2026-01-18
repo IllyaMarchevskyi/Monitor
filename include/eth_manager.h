@@ -5,7 +5,8 @@
 #include <string.h>
 #include <utility/w5100.h>
 
-extern EthernetServer server;
+extern EthernetServer modbus_server;
+extern EthernetServer serial_server;
 
 void initEthernet();
 

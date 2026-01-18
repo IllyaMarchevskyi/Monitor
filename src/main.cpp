@@ -17,6 +17,7 @@
 #include "modbus.h"
 #include "relay.h"
 #include "sensor_box.h"
+#include "serial.h"
 #include "utils.h"
 
 bool alive2 = false, alive4 = false, alive6 = false, alive7 = false;
@@ -25,12 +26,12 @@ static void initSerials();
 static void pollMonitoringData();
 
 void setup() {
-  fill(send_arr, SEND_ARR_SIZE , DEFAULT_SEND_VAL);
+  fill(send_arr, SEND_ARR_SIZE, DEFAULT_SEND_VAL);
 
   initDisplay();
   Serial.begin(SERIAL0_BAUD);
   Serial.setTimeout(10);
-  Serial.println("Setup Monitoring");
+  logLine("Setup Monitoring", true);
 
   initSerials();
 
@@ -42,7 +43,7 @@ void setup() {
   sensor_box.postTransmission(post_transmission_main);
 
   initEthernet();
-  Serial.println("Finsh Initialization");
+  logLine("Finsh Initialization", true);
 }
 void loop() {
   uint32_t t1 = millis();
@@ -58,15 +59,16 @@ void loop() {
   // TIME_CALL("Work with data", collectAndAverageEveryMinute());
   TIME_CALL("Monitoring Data", pollMonitoringData());
   TIME_CALL("Modbus connect", modbusTcpServiceOnce());
-  TIME_CALL("Drawing value on arduino", drawValue(alive2, alive4, alive6, alive7));
+  TIME_CALL("Drawing value on arduino",
+            drawValue(alive2, alive4, alive6, alive7));
   TIME_CALL("Ralay", ensureNetOrRebootPort0());
   TIME_CALL("Send to Server1",
             httpPostSensors(SERVER_IP, server_port, "/ingest"));
   uint32_t dt_ms = millis() - t1;
   if (dt_ms > 500) {
-    Serial.print("Час: ");
-    Serial.print(dt_ms);
-    Serial.println(" ms");
+    logLine("Час: ", false);
+    logLine(dt_ms, false);
+    logLine(" ms", true);
   }
 }
 

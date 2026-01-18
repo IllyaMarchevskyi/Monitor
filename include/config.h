@@ -89,6 +89,7 @@ constexpr int divider = 100;
 // ---------- Ethernet / Modbus TCP ----------
 // Local TCP server
 constexpr uint16_t MODBUS_TCP_PORT = 502;
+constexpr uint16_t Serial_TCP_PORT = 503;
 
 extern const byte MAC_ADDR[];
 extern const IPAddress STATIC_IP;

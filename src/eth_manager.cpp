@@ -1,8 +1,10 @@
 #include "eth_manager.h"
 #include "config.h"
 #include "utils.h"
+#include "serial.h"
 
-EthernetServer server(MODBUS_TCP_PORT);
+EthernetServer modbus_server(MODBUS_TCP_PORT);
+EthernetServer serial_server(MODBUS_TCP_PORT);
 
 static inline bool mac_valid(const uint8_t *m);
 static String macToStringLocal(const uint8_t mac[6]);
@@ -21,23 +23,23 @@ static void printEthDiag(EthernetClient &c);
 void initEthernet() {
   Ethernet.init(ETH_CS);
   uint8_t mac[6];
-  Serial.println("Initialization Ethernet");
+  logLine("Initialization Ethernet", true);
   if (!loadMacFromEeprom(mac)) {
     // Fallback to default MAC from Config.h when EEPROM contains 00.. or FF..
-    Serial.println("Get Mac from EEPROM");
+    logLine("Get Mac from EEPROM", true);
     memcpy(mac, MAC_ADDR, 6);
   }
   if (Ethernet.begin(mac, 1000) == 0) {
-    Serial.println("Get Mac Def");
-    Serial.println("DHCP failed. Using static IP.");
+    logLine("Get Mac Def", true);
+    logLine("DHCP failed. Using static IP.", true);
     Ethernet.begin(mac, STATIC_IP, GETWAY);
   }
-  server.begin();
-  Serial.print("Modbus server on ");
-  Serial.println(Ethernet.localIP());
-  Serial.println("0=NoHardware, 1=W5100, 2=W5200, 3=W5500");
-  Serial.print("HW=");
-  Serial.println((int)Ethernet.hardwareStatus());
+  modbus_server.begin();
+  logLine("Modbus modbus_server on ", false);
+  logLine(Ethernet.localIP(), true);
+  logLine("0=NoHardware, 1=W5100, 2=W5200, 3=W5500", true);
+  logLine("HW=", false);
+  logLine((int)Ethernet.hardwareStatus(), true);
 }
 
 // Public: POST to hostname
@@ -47,7 +49,7 @@ bool httpPostSensors(const char *host, uint16_t port, const char *path) {
 
   EthernetClient client;
   if (!client.connect(host, port)) {
-    Serial.println(F("HTTP POST connect(host) failed"));
+    logLine(F("HTTP POST connect(host) failed"), true);
     return false;
   }
   return httpPostSensorsImpl(client, host, path);
@@ -60,7 +62,7 @@ bool httpPostSensors(const IPAddress &ip, uint16_t port, const char *path) {
 
   EthernetClient client;
   if (!client.connect(ip, port)) {
-    Serial.println(F("HTTP POST connect(IP) failed"));
+    logLine(F("HTTP POST connect(IP) failed"), true);
     return false;
   }
   // Build Host header from IP (HTTP/1.1 requires Host)
@@ -72,32 +74,32 @@ bool httpPostSensors(const IPAddress &ip, uint16_t port, const char *path) {
 bool pingId_Ethernet(const IPAddress &ip, uint16_t port,
                      uint16_t timeoutMs = 800) {
   EthernetClient client;
-  Serial.print(F("Connect "));
-  Serial.print(ip);
-  Serial.print(F(":"));
-  Serial.println(port);
+  logLine(F("Connect "), false);
+  logLine(ip, false);
+  logLine(F(":"), false);
+  logLine(port, true);
 #if defined(ETHERNET_H)
   if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-    Serial.println(F("ERROR: No Ethernet hardware"));
+    logLine(F("ERROR: No Ethernet hardware"), true);
   }
   if (Ethernet.linkStatus() == LinkOFF) {
-    Serial.println(F("ERROR: LinkOFF"));
+    logLine(F("ERROR: LinkOFF"), true);
   }
 #endif
   uint32_t t0 = millis();
   bool ok = client.connect(ip, port);
   uint32_t dt = millis() - t0;
   if (!ok) {
-    Serial.print(F("Connect FAILED in "));
-    Serial.print(dt);
-    Serial.println(F(" ms"));
+    logLine(F("Connect FAILED in "), false);
+    logLine(dt, false);
+    logLine(F(" ms"), true);
     printEthDiag(client);
     client.stop();
     return false;
   }
-  Serial.print(F("Connect OK in "));
-  Serial.print(dt);
-  Serial.println(F(" ms"));
+  logLine(F("Connect OK in "), false);
+  logLine(dt, false);
+  logLine(F(" ms"), true);
   printEthDiag(client);
   client.stop();
   return true;
@@ -328,23 +330,23 @@ static const char *sockName(uint8_t s) {
 }
 static void printEthDiag(EthernetClient &c) {
 #if defined(ETHERNET_H)
-  Serial.print(F("HW="));
-  Serial.print(hwName(Ethernet.hardwareStatus()));
-  Serial.print(F(" LINK="));
-  Serial.print(linkName(Ethernet.linkStatus()));
+  logLine(F("HW="), false);
+  logLine(hwName(Ethernet.hardwareStatus()), false);
+  logLine(F(" LINK="), false);
+  logLine(linkName(Ethernet.linkStatus()), false);
 #endif
-  Serial.print(F(" Sock=0x"));
-  Serial.print(c.status(), HEX);
-  Serial.print(F(" ("));
-  Serial.print(sockName(c.status()));
-  Serial.println(F(")"));
+  logLine(F(" Sock=0x"), false);
+  logLine(c.status(), HEX, false);
+  logLine(F(" ("), false);
+  logLine(sockName(c.status()), false);
+  logLine(F(")"), true);
 
-  Serial.print(F("Local="));
-  Serial.print(Ethernet.localIP());
-  Serial.print(F(" GW="));
-  Serial.print(Ethernet.gatewayIP());
-  Serial.print(F(" DNS="));
-  Serial.print(Ethernet.dnsServerIP());
-  Serial.print(F(" MASK="));
-  Serial.println(Ethernet.subnetMask());
+  logLine(F("Local="), false);
+  logLine(Ethernet.localIP(), false);
+  logLine(F(" GW="), false);
+  logLine(Ethernet.gatewayIP(), false);
+  logLine(F(" DNS="), false);
+  logLine(Ethernet.dnsServerIP(), false);
+  logLine(F(" MASK="), false);
+  logLine(Ethernet.subnetMask(), true);
 }

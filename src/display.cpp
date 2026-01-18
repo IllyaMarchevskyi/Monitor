@@ -1,6 +1,7 @@
 #include "display.h"
 #include "config.h"
 #include "utils.h"
+#include "serial.h"
 
 TFT_eSPI tft;
 
@@ -53,10 +54,10 @@ static void drawData() {
     y = (i < len_col)       ? i * y_step
         : (i < len_col * 2) ? (i - len_col) * y_step
                             : (i - len_col * 2) * y_step;
-    Serial.print("X: ");
-    Serial.print(x);
-    Serial.print("Y: ");
-    Serial.println(y);
+    logLine("X: ", false);
+    logLine(x, false);
+    logLine("Y: ", false);
+    logLine(y, true);
     tft.fillRect(x, y, 150, y_step, TFT_BLACK);
     char label[16];
     sprintf(label, "%s: ", labels[i].name);

@@ -1,5 +1,7 @@
 #include "bdbg.h"
 #include "config.h"
+#include "utils.h"
+#include "serial.h"
 
 // Внутрішній стан модуля (не видно іншим файлам)
 static uint8_t bdbg_raw[10] = {0};
@@ -27,7 +29,7 @@ void pollRadiation() {
 static void bdbgPeriodicRequest() {
   if (millis() - bdbg_last_req >= BDBG_TIME_SLEEP) {
     const uint8_t cmd[] = {0x55, 0xAA, 0x01};
-    Serial.println("Start BDBG-09");
+    logLine("Start BDBG-09", true);
 
     bdbg_last_req = millis();
     bdbg_idx = 0;
@@ -46,7 +48,7 @@ static void bdbgPeriodicRequest() {
     delayMicroseconds(1200);
     digitalWrite(BDBG_DIR_PIN, LOW);
 
-    Serial.print("[TX] ");
+    logLine("[TX] ", false);
     bdbg_print_hex(cmd, sizeof(cmd));
 
     bdbg_first_deadline = millis() + BDBG_FIRST_BYTE_TIMEOUT_MS;
@@ -68,15 +70,15 @@ static void bdbgTryFinalizeFrame() {
 
   uint32_t now = millis();
   if (bdbg_idx == 0 && now >= bdbg_first_deadline) {
-    Serial.println("[BDBG] RX timeout (no first byte)");
+    logLine("[BDBG] RX timeout (no first byte)", true);
     bdbg_waiting = false;
     return;
   }
 
   if (bdbg_idx > 0 && (now - bdbg_last_byte) >= BDBG_INTERBYTE_TIMEOUT_MS) {
-    Serial.print("[RX] ");
-    Serial.print(bdbg_idx);
-    Serial.println(" B");
+    logLine("[RX] ", false);
+    logLine(bdbg_idx, false);
+    logLine(" B", true);
     bdbg_print_hex(bdbg_buf, bdbg_idx);
 
     if (bdbg_idx == 10) {
@@ -87,23 +89,23 @@ static void bdbgTryFinalizeFrame() {
                      ((uint32_t)bdbg_raw[4] << 8) | ((uint32_t)bdbg_raw[3]);
       radiation_uSvh = raw / 100.0f;
     } else {
-      Serial.print("BDBG: bad length=");
-      Serial.println(bdbg_idx);
+      logLine("BDBG: bad length=", false);
+      logLine(bdbg_idx, true);
     }
 
     bdbg_idx = 0;
     bdbg_has_data = false;
     bdbg_waiting = false;
-    Serial.println("Finish BDBG-09");
+    logLine("Finish BDBG-09", true);
   }
 }
 
 static void bdbg_print_hex(const uint8_t *p, size_t n) {
   for (size_t i = 0; i < n; i++) {
     if (p[i] < 0x10)
-      Serial.print('0');
-    Serial.print(p[i], HEX);
-    Serial.print(' ');
+      logLine('0', false);
+    logLine(p[i], HEX, false);
+    logLine(' ', false);
   }
-  Serial.println();
+  logLine();
 }

@@ -2,6 +2,7 @@
 #include "config.h"
 #include "eth_manager.h"
 #include "utils.h"
+#include "serial.h"
 
 ModbusMaster sensor_box;
 
@@ -36,7 +37,7 @@ static void read_TEMP_RH(float *mass) {
   sensor_box.begin(11, Serial3);
   uint8_t res = sensor_box.readHoldingRegisters(0x0000, 2);
   if (res != sensor_box.ku8MBSuccess) {
-    Serial.println("FAILED GET SERVICE_T DATA");
+    logLine("FAILED GET SERVICE_T DATA", true);
     rs485_release();
     return;
   }
@@ -45,12 +46,12 @@ static void read_TEMP_RH(float *mass) {
   int16_t t_raw_s = (int16_t)t_raw_u;
   mass[0] = t_raw_s / 10.0f;
   mass[1] = rh_raw / 10.0f;
-  Serial.print("TEMP: ");
-  Serial.println(t_raw_s);
-  Serial.println(service_t[0]);
-  Serial.print("RH: ");
-  Serial.println(rh_raw);
-  Serial.println(service_t[1]);
+  logLine("TEMP: ", false);
+  logLine(t_raw_s, true);
+  logLine(service_t[0], true);
+  logLine("RH: ", false);
+  logLine(rh_raw, true);
+  logLine(service_t[1], true);
 
   rs485_release();
 }
@@ -76,25 +77,25 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     }
   }
 
-  Serial.print("ID");
-  Serial.print(PRIMARY_IDS[0]);
-  Serial.print(": ");
-  Serial.print(alive1);
-  Serial.print(" | ");
-  Serial.print("ID");
-  Serial.print(PRIMARY_IDS[1]);
-  Serial.print(": ");
-  Serial.print(alive2);
-  Serial.print(" | ");
-  Serial.print("ID");
-  Serial.print(PRIMARY_IDS[2]);
-  Serial.print(": ");
-  Serial.print(alive3);
-  Serial.print(" | ");
-  Serial.print("ID");
-  Serial.print(PRIMARY_IDS[3]);
-  Serial.print(": ");
-  Serial.println(alive4);
+  logLine("ID", false);
+  logLine(PRIMARY_IDS[0], false);
+  logLine(": ", false);
+  logLine(alive1, false);
+  logLine(" | ", false);
+  logLine("ID", false);
+  logLine(PRIMARY_IDS[1], false);
+  logLine(": ", false);
+  logLine(alive2, false);
+  logLine(" | ", false);
+  logLine("ID", false);
+  logLine(PRIMARY_IDS[2], false);
+  logLine(": ", false);
+  logLine(alive3, false);
+  logLine(" | ", false);
+  logLine("ID", false);
+  logLine(PRIMARY_IDS[3], false);
+  logLine(": ", false);
+  logLine(alive4, true);
 
   // 2) Build list of additional IDs to poll
   uint8_t toPoll[7] = {0};
@@ -123,18 +124,18 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     switch (id) {
     case 2:
       if (!readHalfFloats(id, v, GAS_START_ADDR2, GAS_REG_COUNT2)) {
-        Serial.println("id: " + String(id) + " | Not Found CO, SO2, NO2");
+        logLine("id: " + String(id) + " | Not Found CO, SO2, NO2", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("CO ");
-      Serial.println(v[1]);
-      Serial.print("SO2 ");
-      Serial.println(v[3]);
-      Serial.print("NO2 ");
-      Serial.println(v[5]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("CO ", false);
+      logLine(v[1], true);
+      logLine("SO2 ", false);
+      logLine(v[3], true);
+      logLine("NO2 ", false);
+      logLine(v[5], true);
       sensors_dec[0] = v[1] / co_divider;      // CO
       sensors_dec[1] = v[3] / so2_no2_divider; // SO2
       sensors_dec[2] = v[5] / so2_no2_divider; // NO2
@@ -143,80 +144,80 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     case 3:
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0035, /*qty*/ 4);
       if (!sendHexTCP(v, ip_3, port, REQ, len, time_sleep)) {
-        Serial.println("id: " + String(id) + " | Not Found SO2, H2S");
+        logLine("id: " + String(id) + " | Not Found SO2, H2S", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("SO2 ");
-      Serial.println(v[0]);
-      Serial.print("H2S ");
-      Serial.println(v[1]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("SO2 ", false);
+      logLine(v[0], true);
+      logLine("H2S ", false);
+      logLine(v[1], true);
       sensors_dec[1] = v[0]; // SO2
       sensors_dec[4] = v[1]; // H2S
       break;
     case 4:
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
       if (!sendHexTCP(v, ip_4, port, REQ, len, time_sleep)) {
-        Serial.println("id: " + String(id) + " | Not Found CO");
+        logLine("id: " + String(id) + " | Not Found CO", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("CO ");
-      Serial.println(v[0]);
+      logLine("CO ", false);
+      logLine(v[0], true);
       sensors_dec[0] = v[0]; // CO
       break;
     case 5:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
-        Serial.println("id: " + String(id) + " | Not Found CO, SO2, NO2");
+        logLine("id: " + String(id) + " | Not Found CO, SO2, NO2", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("CO ");
-      Serial.println(v[0]);
-      Serial.print("SO2 ");
-      Serial.println(v[1]);
-      Serial.print("NO2 ");
-      Serial.println(v[2]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("CO ", false);
+      logLine(v[0], true);
+      logLine("SO2 ", false);
+      logLine(v[1], true);
+      logLine("NO2 ", false);
+      logLine(v[2], true);
       sensors_dec[0] = v[0]; // CO
       sensors_dec[1] = v[1]; // SO2
       sensors_dec[2] = v[2]; // NO2
       break;
     case 6:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
-        Serial.println("id: " + String(id) + " | Not Found NO, H2S, O3");
+        logLine("id: " + String(id) + " | Not Found NO, H2S, O3", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("NO ");
-      Serial.println(v[0]);
-      Serial.print("H2S ");
-      Serial.println(v[1]);
-      Serial.print("O3 ");
-      Serial.println(v[2]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("NO ", false);
+      logLine(v[0], true);
+      logLine("H2S ", false);
+      logLine(v[1], true);
+      logLine("O3 ", false);
+      logLine(v[2], true);
       sensors_dec[3] = v[0]; // NO
       sensors_dec[4] = v[1]; // H2S
       sensors_dec[5] = v[2]; // O3
       break;
     case 7:
       if (!readFloats(id, v, GAS_START_ADDR, GAS_REG_COUNT)) {
-        Serial.println("id: " + String(id) + " | Not Found NH3, H2S, O3");
+        logLine("id: " + String(id) + " | Not Found NH3, H2S, O3", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("NH3 ");
-      Serial.println(v[0]);
-      Serial.print("H2S ");
-      Serial.println(v[1]);
-      Serial.print("O3 ");
-      Serial.println(v[2]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("NH3 ", false);
+      logLine(v[0], true);
+      logLine("H2S ", false);
+      logLine(v[1], true);
+      logLine("O3 ", false);
+      logLine(v[2], true);
       sensors_dec[6] = v[0]; // NH3
       sensors_dec[4] = v[1]; // H2S
       sensors_dec[5] = v[2]; // O3
@@ -225,7 +226,7 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       float NO = 0, NO2 = 0;
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
       if (!sendHexTCP(v, ip_8, port, REQ, len, time_sleep)) {
-        Serial.println("id: " + String(id) + " | Not Found NO, NO2, NH3");
+        logLine("id: " + String(id) + " | Not Found NO, NO2, NH3", true);
         active_ids[i] = false;
         continue;
       }
@@ -235,14 +236,14 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       NO2 = v[0];
       len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x00b7, /*qty*/ 2);
       sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
-      Serial.print("ID: ");
-      Serial.println(id);
-      Serial.print("NO ");
-      Serial.println(NO);
-      Serial.print("NO2 ");
-      Serial.println(NO2);
-      Serial.print("NH3 ");
-      Serial.println(v[0]);
+      logLine("ID: ", false);
+      logLine(id, true);
+      logLine("NO ", false);
+      logLine(NO, true);
+      logLine("NO2 ", false);
+      logLine(NO2, true);
+      logLine("NH3 ", false);
+      logLine(v[0], true);
       sensors_dec[3] = NO;   // NO
       sensors_dec[2] = NO2;  // NO2
       sensors_dec[6] = v[0]; // NH3
@@ -251,14 +252,14 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     case 10: {
       float pm25 = 0, pm10 = 0;
       if (!readPM(PM_ID, PM_START_ADDR, pm25, pm10)) {
-        Serial.println("id: " + String(id) + " | Not Found PM25, PM10");
+        logLine("id: " + String(id) + " | Not Found PM25, PM10", true);
         active_ids[i] = false;
         continue;
       }
-      Serial.print("PM25 ");
-      Serial.println(pm25 / pm_divider);
-      Serial.print("PM10 ");
-      Serial.println(pm10 / pm_divider);
+      logLine("PM25 ", false);
+      logLine(pm25 / pm_divider, true);
+      logLine("PM10 ", false);
+      logLine(pm10 / pm_divider, true);
       sensors_dec[7] = pm25 / pm_divider;
       sensors_dec[8] = pm10 / pm_divider;
       break;
@@ -297,10 +298,10 @@ static bool pingId(uint8_t id) {
     return false;
   sensor_box.begin(id, Serial3);
   uint8_t res = sensor_box.readHoldingRegisters(GAS_START_ADDR, 2);
-  Serial.print("ID answer -> ");
-  Serial.println(id);
-  Serial.print("pingId res=0x");
-  Serial.println(res, HEX);
+  logLine("ID answer -> ", false);
+  logLine(id, true);
+  logLine("pingId res=0x", false);
+  logLine(res, HEX, true);
   bool ok = (res == sensor_box.ku8MBSuccess);
   rs485_release();
   return ok;
@@ -393,9 +394,9 @@ static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
 
   size_t sent = client.write(data, len);
   client.flush();
-  Serial.print(F("Sent "));
-  Serial.print(sent);
-  Serial.println(F(" bytes:"));
+  logLine(F("Sent "), false);
+  logLine(sent, false);
+  logLine(F(" bytes:"), true);
   printHex(data, len);
 
   size_t got = 0;
@@ -413,12 +414,12 @@ static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
   for (int i = 0; i < resp[8] / 4; i++)
     mass[i] = decodeFloat32(dataStart + i * 4, true, false);
 
-  Serial.print(F("Recv "));
-  Serial.print(got);
-  Serial.println(F(" bytes:"));
+  logLine(F("Recv "), false);
+  logLine(got, false);
+  logLine(F(" bytes:"), true);
   if (got)
     printHex(resp, got);
-  Serial.println(F("----------------------"));
+  logLine(F("----------------------"), true);
 
   return true;
 }

@@ -1,4 +1,5 @@
 #pragma once
+#include "serial.h"
 #include <Arduino.h>
 #include <string.h>
 
@@ -13,13 +14,13 @@
     uint32_t __dus = micros() - __t0;                                          \
     uint32_t __dms = millis() - __t0m;                                         \
     if (__dms > 100) {                                                         \
-      Serial.print(F("[T] "));                                                 \
-      Serial.print(label);                                                     \
-      Serial.print(F(": "));                                                   \
-      Serial.print(__dus);                                                     \
-      Serial.print(F(" us  (~"));                                              \
-      Serial.print(__dms);                                                     \
-      Serial.println(F(" ms)"));                                               \
+      logLine(F("[T] "), false);                                               \
+      logLine(label, false);                                                   \
+      logLine(F(": "), false);                                                 \
+      logLine(__dus, false);                                                   \
+      logLine(F(" us  (~"), false);                                            \
+      logLine(__dms, false);                                                   \
+      logLine(F(" ms)"), true);                                                \
     }                                                                          \
   } while (0)
 #else
@@ -46,8 +47,7 @@ void pre_transmission_main();
 void post_transmission_main();
 void collectAndAverageEveryMinute();
 
-template <typename T>
-void fill(T *mass, size_t count, T value) {
+template <typename T> void fill(T *mass, size_t count, T value) {
   for (size_t i = 0; i < count; ++i)
     mass[i] = value;
 }

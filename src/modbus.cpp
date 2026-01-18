@@ -7,7 +7,7 @@ static void modbusTcpHandleRequest(EthernetClient &client,
 
 
 void modbusTcpServiceOnce() {
-  EthernetClient client = server.available();
+  EthernetClient client = modbus_server.available();
   if (!client || !client.connected())
     return;
 

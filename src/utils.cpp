@@ -1,5 +1,6 @@
-#include "utils.h"
 #include "config.h"
+#include "utils.h"
+#include "serial.h"
 
 static void rebuildSendArrayFromLabels();
 static void arrSumPeriodicUpdate();
@@ -78,11 +79,11 @@ size_t buildMbTcpRead03(uint8_t *out, uint16_t txId, uint8_t unit,
 void printHex(const uint8_t *b, size_t n) {
   for (size_t i = 0; i < n; i++) {
     if (b[i] < 0x10)
-      Serial.print('0');
-    Serial.print(b[i], HEX);
-    Serial.print(' ');
+      logLine('0', false);
+    logLine(b[i], HEX, false);
+    logLine(' ', false);
   }
-  Serial.println();
+  logLine();
 }
 
 // ================================ RS-485 DIR ================================
@@ -95,8 +96,8 @@ void collectAndAverageEveryMinute() {
 
   arrSumPeriodicUpdate();
   acc_count++;
-  Serial.print("Acc_count: ");
-  Serial.println(acc_count);
+  logLine("Acc_count: ", false);
+  logLine(acc_count, true);
 
   if (acc_count >= SAMPLES_PER_MIN) {
     for (size_t index = 0; index < CH_COUNT; ++index) {
@@ -120,7 +121,7 @@ void collectAndAverageEveryMinute() {
     acc_count = 0;
 
     rebuildSendArrayFromLabels();
-    Serial.println(F("--- 1-min averages ready ---"));
+    logLine(F("--- 1-min averages ready ---"), true);
     sendArrPeriodicUpdate();
   }
   tmp_id_value++;
@@ -164,13 +165,13 @@ static void arrSumPeriodicUpdate() {
 // ============================== send_arr Maintenance ========================
 static void sendArrPeriodicUpdate() {
   for (uint16_t id = 0; id < labels_len; id++) {
-    Serial.print(labels[id].name);
-    Serial.print(": ");
-    Serial.print("send_arr");
-    Serial.print('[');
-    Serial.print(id);
-    Serial.print("]=");
-    Serial.print(send_arr[id]);
-    Serial.println(';');
+    logLine(labels[id].name, false);
+    logLine(": ", false);
+    logLine("send_arr", false);
+    logLine('[', false);
+    logLine(id, false);
+    logLine("]=", false);
+    logLine(send_arr[id], false);
+    logLine(';', true);
   }
 }

@@ -1,6 +1,7 @@
 #include "relay.h"
 #include "config.h"
 #include "utils.h"
+#include "serial.h"
 
 uint8_t relay_on[] = {0x0B, 0x05, 0x00, 0x00, 0xFF, 0x00};
 uint8_t relay_off[] = {0x0B, 0x05, 0x00, 0x00, 0x00, 0x00};
@@ -9,7 +10,7 @@ bool relay_turn_off = false;
 bool relay_turn_on = false;
 
 static uint16_t crc16_modbus(const uint8_t *p, size_t n) {
-  Serial.println("crc16_modbus");
+  logLine("crc16_modbus", true);
   uint16_t crc = 0xFFFF;
   while (n--) {
     crc ^= *p++;
@@ -29,9 +30,9 @@ static void relayTimedPulse(uint8_t unitId, uint8_t channel) {
   relay_off[3] = (uint8_t)(channel & 0xFF);
 
   if (relay_turn_off) {
-    Serial.println("Relay Stop id 0");
+    logLine("Relay Stop id 0", true);
     if (!rs485_acquire(300)) {
-      Serial.println("RS485 busy, skip relay pulse");
+      logLine("RS485 busy, skip relay pulse", true);
       return;
     }
 
@@ -47,19 +48,19 @@ static void relayTimedPulse(uint8_t unitId, uint8_t channel) {
   }
   // delay(RELAY_PULSE_MS);
   if (time_guard_allow("print_time_wait_start_id_0", 1000)) {
-    Serial.print(millis() - start_time);
-    Serial.print(" >= ");
-    Serial.println(RELAY_PULSE_MS);
-    Serial.print("Time: ");
-    Serial.println(millis() - start_time >= RELAY_PULSE_MS);
-    Serial.print("Reley On: ");
-    Serial.println(relay_turn_on);
+    logLine(millis() - start_time, false);
+    logLine(" >= ", false);
+    logLine(RELAY_PULSE_MS, true);
+    logLine("Time: ", false);
+    logLine(millis() - start_time >= RELAY_PULSE_MS, true);
+    logLine("Reley On: ", false);
+    logLine(relay_turn_on, true);
   }
   if (millis() - start_time >= RELAY_PULSE_MS && relay_turn_on) {
-    Serial.println("Relay Start id 0");
+    logLine("Relay Start id 0", true);
 
     if (!rs485_acquire(300)) {
-      Serial.println("RS485 busy, skip relay pulse");
+      logLine("RS485 busy, skip relay pulse", true);
       return;
     }
 
@@ -83,14 +84,14 @@ static bool isInternetAlive(const IPAddress &testIp, uint16_t port,
   bool ok = c.connect(testIp, port);
   uint32_t dt = millis() - t0;
   if (ok) {
-    Serial.println("Іnternet Сonnection Successful!!");
+    logLine("Іnternet Сonnection Successful!!", true);
     c.stop();
   }
-  Serial.print("TCP check: ");
-  Serial.print(ok);
-  Serial.print(" in ");
-  Serial.print(dt);
-  Serial.println(" ms");
+  logLine("TCP check: ", false);
+  logLine(ok, false);
+  logLine(" in ", false);
+  logLine(dt, false);
+  logLine(" ms", true);
   return ok;
 }
 
