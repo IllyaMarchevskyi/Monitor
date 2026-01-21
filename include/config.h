@@ -15,6 +15,13 @@
 #define SEC 1000UL
 #define MIN (60UL * SEC)
 
+#ifndef SERVER_IP_VALUE
+#define SERVER_IP_VALUE "example.com"
+#endif
+#ifndef API_KEY_VALUE
+#define API_KEY_VALUE "64*******1f"
+#endif
+
 // --------- Globals mass --------------
 extern double send_arr[];
 extern float sensors_dec[];

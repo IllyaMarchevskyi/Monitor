@@ -5,6 +5,10 @@
 EthernetClient client;
 
 void streamLogData() {
+  if (client && !client.connected()) {
+    client.stop();
+  }
+
   if (!client || !client.connected()) {
     client = serial_server.accept();
   }

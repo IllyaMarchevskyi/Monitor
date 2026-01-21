@@ -5,14 +5,19 @@
 static void modbusTcpHandleRequest(EthernetClient &client,
                                    const uint8_t *request, size_t n);
 
+static EthernetClient client;
 
 void modbusTcpServiceOnce() {
-  EthernetClient client = modbus_server.available();
+  if (client && !client.connected()){
+    client.stop();
+  }
+  
+  if (!client || !client.connected()){
+    client = modbus_server.available();
+  }
+
   if (!client || !client.connected())
     return;
-
-  if (!client.connected() && client.available() == 0)
-    client.stop();
 
   if (client.available() >= 12) {
     uint8_t req[260];
