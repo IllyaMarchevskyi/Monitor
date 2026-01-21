@@ -29,11 +29,11 @@ void initEthernet() {
     logLine("Get Mac from EEPROM", true);
     memcpy(mac, MAC_ADDR, 6);
   }
-  if (Ethernet.begin(mac, 1000) == 0) {
-    logLine("Get Mac Def", true);
-    logLine("DHCP failed. Using static IP.", true);
-    Ethernet.begin(mac, STATIC_IP, GETWAY);
-  }
+  // if (Ethernet.begin(mac, 1000) == 0) {
+  //   logLine("Get Mac Def", true);
+  //   logLine("DHCP failed. Using static IP.", true);
+  // }
+  Ethernet.begin(mac, STATIC_IP, GETWAY);
   modbus_server.begin();
   serial_server.begin();
   logLine("Modbus modbus_server on ", false);

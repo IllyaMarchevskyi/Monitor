@@ -13,8 +13,8 @@ bool active_ids[6] = {false, false, false, false, false, false};
 const uint8_t PRIMARY_IDS[] = {2, 4, 6, 7};
 const uint8_t PRIMARY_COUNT = ARRLEN(PRIMARY_IDS);
 
-const uint8_t EXTRA_IF_ONLY2[] = {2, 5, 10};
-const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8, 10};
+const uint8_t EXTRA_IF_ONLY2[] = {2, 5};
+const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8};
 const uint8_t EXTRA_IF_ONLY6[] = {6, 5, 10};
 const uint8_t EXTRA_IF_ONLY7[] = {7, 5, 10};
 
@@ -33,8 +33,9 @@ const IPAddress GETWAY(192, 168, 88, 1);
 
 uint8_t resp[256];
 
-const char SERVER_IP[] = "example.com";
-const char API_KEY[] = "64*******1f";
+// Allow overriding via PlatformIO build flags.
+const char SERVER_IP[] = SERVER_IP_VALUE;
+const char API_KEY[] = API_KEY_VALUE;
 
 const IPAddress NET_CHECK_IP(8, 8, 8, 8);
 
