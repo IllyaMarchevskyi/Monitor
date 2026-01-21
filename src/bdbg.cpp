@@ -77,7 +77,7 @@ static void bdbgTryFinalizeFrame() {
 
   if (bdbg_idx > 0 && (now - bdbg_last_byte) >= BDBG_INTERBYTE_TIMEOUT_MS) {
     logLine("[RX] ", false);
-    logLine(bdbg_idx, false);
+    logLine(bdbg_idx, true);
     logLine(" B", true);
     bdbg_print_hex(bdbg_buf, bdbg_idx);
 

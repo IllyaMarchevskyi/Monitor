@@ -137,7 +137,12 @@ static void rebuildSendArrayFromLabels() {
     ChannelIndex channel = labels[i].channel;
     size_t idx = static_cast<size_t>(channel);
     if (idx < CH_COUNT) {
-      value = labels[i].useStd ? channel_std[idx] : channel_avg[idx];
+      if (channel == CH_R) {
+        // Use the latest radiation value instead of minute average.
+        value = radiation_uSvh;
+      } else {
+        value = labels[i].useStd ? channel_std[idx] : channel_avg[idx];
+      }
     }
     send_arr[i] = value;
   }
@@ -150,9 +155,7 @@ static void arrSumPeriodicUpdate() {
     acc_sq_sum[i] += sensors_dec[index] * sensors_dec[index];
   }
 
-  // Radiation and service (no meteo)
-  acc_sum[i] += radiation_uSvh;
-  acc_sq_sum[i] += radiation_uSvh * radiation_uSvh;
+  // Radiation: do not accumulate, keep channel index aligned.
   ++i;
   // acc_sum[9] += radiation_uSvh;
   // acc_sq_sum[9] += radiation_uSvh * radiation_uSvh;

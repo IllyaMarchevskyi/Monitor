@@ -37,7 +37,7 @@ uint8_t resp[256];
 const char SERVER_IP[] = SERVER_IP_VALUE;
 const char API_KEY[] = API_KEY_VALUE;
 
-const IPAddress NET_CHECK_IP(8, 8, 8, 8);
+const IPAddress NET_CHECK_IP(192, 168, 88, 1);
 
 const LabelEntry labels[] = {
     {"CO", CH_CO, false},       {"SO2", CH_SO2, false},
