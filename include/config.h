@@ -4,7 +4,9 @@
 #include <Ethernet.h> // дає IPAddress та byte
 
 // ######### VERSION #########
-#define VERSION "1.1.5"
+#ifndef VERSION
+#define VERSION "####"
+#endif
 // ###########################
 
 // ---------- Helpers ----------
@@ -97,6 +99,7 @@ constexpr int divider = 100;
 // Local TCP server
 constexpr uint16_t MODBUS_TCP_PORT = 502;
 constexpr uint16_t SERIAL_TCP_PORT = 503;
+constexpr uint16_t RELAY_HTTP_PORT = 504;
 
 extern const byte MAC_ADDR[];
 extern const IPAddress STATIC_IP;
@@ -110,12 +113,10 @@ constexpr uint16_t server_port = 4000;
 extern const char API_KEY[];
 
 // ---------- Relay ----------
-extern const IPAddress NET_CHECK_IP; // Google DNS
 constexpr uint16_t NET_CHECK_PORT = 53;
 
 constexpr uint8_t UNIT_ID = 12; // ID пристрою
 constexpr uint8_t CH = 0;       // Канал взаємодії від 0-3
-constexpr uint16_t RELAY_HTTP_PORT = 8080;
 constexpr uint32_t RELAY_PULSE_MS = 2 * MIN;
 
 // ---------- Exported Data Array ----------

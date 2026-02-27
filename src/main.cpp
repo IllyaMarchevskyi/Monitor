@@ -45,6 +45,7 @@ void setup() {
   sensor_box.postTransmission(post_transmission_main);
 
   initEthernet();
+  initRelayHttp();
   logLine("Finsh Initialization", true);
 }
 void loop() {
@@ -67,6 +68,7 @@ void loop() {
   TIME_CALL("Ralay", ensureNetOrRebootPort0());
   TIME_CALL("Send to Server1",
             httpPostSensors(SERVER_IP, server_port, "/ingest"));
+  TIME_CALL("Relay HTTP", relayHttpServiceOnce());
   uint32_t dt_ms = millis() - t1;
   if (dt_ms > 500) {
     logLine("Час: ", false);
