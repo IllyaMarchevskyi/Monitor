@@ -51,15 +51,6 @@ void setup() {
 void loop() {
   uint32_t t1 = millis();
 
-  // TIME_CALL("SensorBox and SensorZTS3008",
-  //           poll_SensorBox_SensorZTS3008(alive2, alive4, alive6, alive7));
-
-  // // BDBG-09
-  // if (!alive4) {
-  //   TIME_CALL("Radiation", pollRadiation());
-  // }
-
-  // TIME_CALL("Work with data", collectAndAverageEveryMinute());
   TIME_CALL("Monitoring Data", pollMonitoringData());
   TIME_CALL("Modbus connect", modbusTcpServiceOnce());
   TIME_CALL("Serial Server", streamLogData());

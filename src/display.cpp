@@ -163,23 +163,6 @@ void drawOnlyValuesIds() {
   }
 }
 
-// static bool eepromMacInvalid() {
-//   bool allFF = true, all00 = true;
-//   for (int i = 0; i < 6; ++i) {
-//     uint8_t b = EEPROM.read(0 + i);
-//     if (b != 0xFF) {
-//       {
-//         allFF = false;
-//       }
-//     }
-//     if (b != 0x00) {
-//       {
-//         all00 = false;
-//       }
-//     }
-//   }
-//   return (allFF || all00);
-// }
 
 static String macToString(const uint8_t mac[6]) {
   auto hx = [](uint8_t v) {
@@ -223,11 +206,7 @@ static void drawFooter() {
 
   // Right bottom: VERSION from Config.h
   tft.setTextDatum(BR_DATUM);
-#ifdef VERSION
   tft.drawString(String("v") + VERSION, w - 2, h - 1);
-#else
-  tft.drawString("v?", w - 2, h - 1);
-#endif
   // Reset datum to default for other drawings
   tft.setTextDatum(TL_DATUM);
 }

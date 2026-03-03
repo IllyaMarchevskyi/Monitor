@@ -4,8 +4,8 @@
 #include <Ethernet.h> // дає IPAddress та byte
 
 // ######### VERSION #########
-#ifndef VERSION
-#define VERSION "####"
+#ifndef VERSION_VALUE
+#define VERSION_VALUE "####"
 #endif
 // ###########################
 
@@ -23,6 +23,8 @@
 #ifndef API_KEY_VALUE
 #define API_KEY_VALUE "64*******1f"
 #endif
+
+extern const char VERSION[];
 
 // --------- Globals mass --------------
 extern double send_arr[];

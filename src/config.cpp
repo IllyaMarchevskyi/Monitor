@@ -36,6 +36,7 @@ uint8_t resp[256];
 // Allow overriding via PlatformIO build flags.
 const char SERVER_IP[] = SERVER_IP_VALUE;
 const char API_KEY[] = API_KEY_VALUE;
+const char VERSION[] = VERSION_VALUE;
 
 const LabelEntry labels[] = {
     {"CO", CH_CO, false},       {"SO2", CH_SO2, false},
