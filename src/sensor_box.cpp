@@ -17,8 +17,14 @@ static bool readFloats(uint8_t id, float out[3], uint16_t startAddr,
                        uint16_t regCount);
 static bool readPM(uint8_t id, uint16_t startAddr, float &f0, float &f1);
 
+static uint16_t modbusRtuCrc16(const uint8_t *data, size_t len);
+static size_t buildMbRtuRead03(uint8_t *out, uint8_t unit, uint16_t addr,
+                               uint16_t qty);
 static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
                            bool byteSwap = false);
+static bool sendRtuOverTcpRead03(float *mass, const IPAddress &ip,
+                                 uint16_t port, uint8_t unit, uint16_t addr,
+                                 uint16_t qty, uint16_t timeoutMs = 20);
 static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
                        const uint8_t *data, size_t len,
                        uint16_t timeoutMs = 20);
@@ -117,9 +123,6 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
   for (uint8_t i = 0; i < nPoll; ++i) {
     uint8_t id = toPoll[i];
     float v[8] = {0};
-    uint8_t REQ[12] = {0};
-    size_t len;
-
 
     switch (id) {
     case 2:
@@ -142,8 +145,8 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       // sensors_dec[4] = v[3]; // H2S
       break;
     case 3:
-      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0035, /*qty*/ 4);
-      if (!sendHexTCP(v, ip_3, port, REQ, len, time_sleep)) {
+      if (!sendRtuOverTcpRead03(v, ip_3, port, /*id*/ id, /*addr*/ 0x0032,
+                                /*qty*/ 4, time_sleep)) {
         logLine("id: " + String(id) + " | Not Found SO2, H2S", true);
         active_ids[i] = false;
         continue;
@@ -158,8 +161,8 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[4] = v[1]; // H2S
       break;
     case 4:
-      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
-      if (!sendHexTCP(v, ip_4, port, REQ, len, time_sleep)) {
+      if (!sendRtuOverTcpRead03(v, ip_4, port, /*id*/ id, /*addr*/ 0x0032,
+                                /*qty*/ 2, time_sleep)) {
         logLine("id: " + String(id) + " | Not Found CO", true);
         active_ids[i] = false;
         continue;
@@ -223,19 +226,20 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       sensors_dec[5] = v[2]; // O3
       break;
     case 8: {
-      float NO = 0, NO2 = 0;
-      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0031, /*qty*/ 2);
-      if (!sendHexTCP(v, ip_8, port, REQ, len, time_sleep)) {
+      float NO = 0, NO2 = 0, NH3 = 0;
+      if (!sendRtuOverTcpRead03(v, ip_8, port, /*id*/ id, /*addr*/ 0x0032,
+                                /*qty*/ 2, time_sleep)) {
         logLine("id: " + String(id) + " | Not Found NO, NO2, NH3", true);
         active_ids[i] = false;
         continue;
       }
       NO = v[0];
-      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x0037, /*qty*/ 2);
-      sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
+      sendRtuOverTcpRead03(v, ip_8, port, /*id*/ id, /*addr*/ 0x0034,
+                           /*qty*/ 2, time_sleep);
       NO2 = v[0];
-      len = buildMbTcpRead03(REQ, 0, /*id*/ id, /*addr*/ 0x00b7, /*qty*/ 2);
-      sendHexTCP(v, ip_8, port, REQ, len, time_sleep);
+      sendRtuOverTcpRead03(v, ip_8, port, /*id*/ id, /*addr*/ 0x00b8,
+                           /*qty*/ 2, time_sleep);
+      NH3 = v[0];
       logLine("ID: ", false);
       logLine(id, true);
       logLine("NO ", false);
@@ -243,10 +247,25 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       logLine("NO2 ", false);
       logLine(NO2, true);
       logLine("NH3 ", false);
-      logLine(v[0], true);
+      logLine(NH3, true);
       sensors_dec[3] = NO;   // NO
       sensors_dec[2] = NO2;  // NO2
-      sensors_dec[6] = v[0]; // NH3
+      sensors_dec[6] = NH3; // NH3
+      break;
+    }
+    case 9: {
+      float pm25 = 0, pm10 = 0;
+      if (!sendRtuOverTcpRead03(v, ip_9, port, id, 0x000, 2, time_sleep)) {
+        logLine("id: " + String(id) + " | Not Found PM25, PM10", true);
+        active_ids[i] = false;
+        continue;
+      }
+      logLine("PM25 ", false);
+      logLine(pm25 / pm_divider, true);
+      logLine("PM10 ", false);
+      logLine(pm10 / pm_divider, true);
+      sensors_dec[7] = pm25 / pm_divider;
+      sensors_dec[8] = pm10 / pm_divider;
       break;
     }
     case 10: {
@@ -266,7 +285,6 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
     }
     }
     active_ids[i] = true;
-    memset(REQ, 0, sizeof(REQ));
   }
 
   // float pm25 = 0, pm10 = 0;
@@ -360,6 +378,32 @@ static bool readPM(uint8_t id, uint16_t startAddr, float &f0, float &f1) {
   return true;
 }
 
+static uint16_t modbusRtuCrc16(const uint8_t *data, size_t len) {
+  uint16_t crc = 0xFFFF;
+  while (len--) {
+    crc ^= *data++;
+    for (uint8_t i = 0; i < 8; ++i) {
+      crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : (crc >> 1);
+    }
+  }
+  return crc;
+}
+
+static size_t buildMbRtuRead03(uint8_t *out, uint8_t unit, uint16_t addr,
+                               uint16_t qty) {
+  out[0] = unit;
+  out[1] = 0x03;
+  out[2] = addr >> 8;
+  out[3] = addr;
+  out[4] = qty >> 8;
+  out[5] = qty;
+
+  uint16_t crc = modbusRtuCrc16(out, 6);
+  out[6] = crc & 0xFF;
+  out[7] = crc >> 8;
+  return 8;
+}
+
 static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
                            bool byteSwap) {
   uint8_t b[4] = {p[0], p[1], p[2], p[3]};
@@ -383,6 +427,92 @@ static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
   float f;
   memcpy(&f, &u, 4);
   return f;
+}
+
+static bool sendRtuOverTcpRead03(float *mass, const IPAddress &ip,
+                                 uint16_t port, uint8_t unit, uint16_t addr,
+                                 uint16_t qty, uint16_t timeoutMs) {
+  uint8_t req[8] = {0};
+  size_t len = buildMbRtuRead03(req, unit, addr, qty);
+
+  EthernetClient client;
+  logLine(F("Connect RTU/TCP "), false);
+  logLine(ip, false);
+  logLine(F(":"), false);
+  logLine(port, true);
+  if (!client.connect(ip, port)) {
+    logLine(F("RTU/TCP connect failed"), true);
+    client.stop();
+    return false;
+  }
+
+  size_t sent = client.write(req, len);
+  client.flush();
+  logLine(F("Sent RTU "), false);
+  logLine(sent, false);
+  logLine(F(" bytes:"), true);
+  printHex(req, len);
+  if (sent != len) {
+    client.stop();
+    return false;
+  }
+
+  size_t got = 0;
+  size_t expected = 0;
+  uint32_t t0 = millis();
+  extern uint8_t resp[256];
+  while (millis() - t0 < timeoutMs) {
+    while (client.available() && got < 256) {
+      resp[got++] = client.read();
+      if (got >= 3 && resp[1] == 0x03) {
+        expected = (size_t)resp[2] + 5;
+      } else if (got >= 2 && resp[1] == (0x03 | 0x80)) {
+        expected = 5;
+      }
+    }
+    if (expected > 0 && got >= expected)
+      break;
+    if (!client.connected() && client.available() == 0)
+      break;
+  }
+  client.stop();
+
+  logLine(F("Recv RTU "), false);
+  logLine(got, false);
+  logLine(F(" bytes:"), true);
+  if (got)
+    printHex(resp, got);
+
+  if (got < 5 || resp[0] != unit)
+    return false;
+  if (resp[1] == (0x03 | 0x80)) {
+    logLine(F("RTU exception code=0x"), false);
+    logLine(resp[2], HEX, true);
+    return false;
+  }
+  if (resp[1] != 0x03)
+    return false;
+
+  uint8_t byteCount = resp[2];
+  expected = (size_t)byteCount + 5;
+  if (got < expected || byteCount != qty * 2)
+    return false;
+
+  uint16_t gotCrc =
+      (uint16_t)resp[expected - 2] | ((uint16_t)resp[expected - 1] << 8);
+  uint16_t calcCrc = modbusRtuCrc16(resp, expected - 2);
+  if (gotCrc != calcCrc) {
+    logLine(F("RTU CRC mismatch"), true);
+    return false;
+  }
+
+  uint8_t floatCount = byteCount / 4;
+  for (uint8_t i = 0; i < floatCount; ++i) {
+    mass[i] = decodeFloat32(resp + 3 + i * 4, true, false);
+  }
+
+  logLine(F("----------------------"), true);
+  return true;
 }
 
 static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
