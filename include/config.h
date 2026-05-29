@@ -76,6 +76,7 @@ extern const uint8_t EXTRA_ONLY7_CNT;
 extern const IPAddress ip_3;
 extern const IPAddress ip_4;
 extern const IPAddress ip_8;
+extern const IPAddress ip_9;
 
 constexpr int port = 5581;
 constexpr uint8_t time_sleep = 20;

@@ -6,6 +6,11 @@
 
 ModbusMaster sensor_box;
 
+enum RtuDecodeMode : uint8_t {
+  RTU_DECODE_FLOAT32,
+  RTU_DECODE_UINT16,
+};
+
 static void read_TEMP_RH(float *mass);
 static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
                                bool &alive4);
@@ -24,7 +29,9 @@ static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
                            bool byteSwap = false);
 static bool sendRtuOverTcpRead03(float *mass, const IPAddress &ip,
                                  uint16_t port, uint8_t unit, uint16_t addr,
-                                 uint16_t qty, uint16_t timeoutMs = 20);
+                                 uint16_t qty, uint16_t timeoutMs = 20,
+                                 RtuDecodeMode decodeMode =
+                                     RTU_DECODE_FLOAT32);
 static bool sendHexTCP(float *mass, const IPAddress &ip, uint16_t port,
                        const uint8_t *data, size_t len,
                        uint16_t timeoutMs = 20);
@@ -254,32 +261,35 @@ static void pollAllSensorBoxes(bool &alive1, bool &alive2, bool &alive3,
       break;
     }
     case 9: {
-      float pm25 = 0, pm10 = 0;
-      if (!sendRtuOverTcpRead03(v, ip_9, port, id, 0x000, 2, time_sleep)) {
+      float pm2_5 = 0, pm10 = 0;
+      if (!sendRtuOverTcpRead03(v, ip_9, port, id, 0x0000, 2, time_sleep,
+                                RTU_DECODE_UINT16)) {
         logLine("id: " + String(id) + " | Not Found PM25, PM10", true);
         active_ids[i] = false;
         continue;
       }
+      pm2_5 = v[0];
+      pm10 = v[1];
       logLine("PM25 ", false);
-      logLine(pm25 / pm_divider, true);
+      logLine(pm2_5 / pm_divider, true);
       logLine("PM10 ", false);
       logLine(pm10 / pm_divider, true);
-      sensors_dec[7] = pm25 / pm_divider;
+      sensors_dec[7] = pm2_5 / pm_divider;
       sensors_dec[8] = pm10 / pm_divider;
       break;
     }
     case 10: {
-      float pm25 = 0, pm10 = 0;
-      if (!readPM(PM_ID, PM_START_ADDR, pm25, pm10)) {
+      float pm2_5 = 0, pm10 = 0;
+      if (!readPM(PM_ID, PM_START_ADDR, pm2_5, pm10)) {
         logLine("id: " + String(id) + " | Not Found PM25, PM10", true);
         active_ids[i] = false;
         continue;
       }
       logLine("PM25 ", false);
-      logLine(pm25 / pm_divider, true);
+      logLine(pm2_5 / pm_divider, true);
       logLine("PM10 ", false);
       logLine(pm10 / pm_divider, true);
-      sensors_dec[7] = pm25 / pm_divider;
+      sensors_dec[7] = pm2_5 / pm_divider;
       sensors_dec[8] = pm10 / pm_divider;
       break;
     }
@@ -431,7 +441,8 @@ static float decodeFloat32(const uint8_t *p, bool wordSwap = true,
 
 static bool sendRtuOverTcpRead03(float *mass, const IPAddress &ip,
                                  uint16_t port, uint8_t unit, uint16_t addr,
-                                 uint16_t qty, uint16_t timeoutMs) {
+                                 uint16_t qty, uint16_t timeoutMs,
+                                 RtuDecodeMode decodeMode) {
   uint8_t req[8] = {0};
   size_t len = buildMbRtuRead03(req, unit, addr, qty);
 
@@ -506,9 +517,18 @@ static bool sendRtuOverTcpRead03(float *mass, const IPAddress &ip,
     return false;
   }
 
-  uint8_t floatCount = byteCount / 4;
-  for (uint8_t i = 0; i < floatCount; ++i) {
-    mass[i] = decodeFloat32(resp + 3 + i * 4, true, false);
+  if (decodeMode == RTU_DECODE_UINT16) {
+    for (uint16_t i = 0; i < qty; ++i) {
+      uint8_t *p = resp + 3 + i * 2;
+      mass[i] = ((uint16_t)p[0] << 8) | p[1];
+    }
+  } else {
+    if (byteCount % 4 != 0)
+      return false;
+    uint8_t floatCount = byteCount / 4;
+    for (uint8_t i = 0; i < floatCount; ++i) {
+      mass[i] = decodeFloat32(resp + 3 + i * 4, true, false);
+    }
   }
 
   logLine(F("----------------------"), true);

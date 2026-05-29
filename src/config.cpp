@@ -14,7 +14,7 @@ const uint8_t PRIMARY_IDS[] = {2, 4, 6, 7};
 const uint8_t PRIMARY_COUNT = ARRLEN(PRIMARY_IDS);
 
 const uint8_t EXTRA_IF_ONLY2[] = {2, 5};
-const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8};
+const uint8_t EXTRA_IF_ONLY4[] = {4, 3, 8, 9};
 const uint8_t EXTRA_IF_ONLY6[] = {6, 5, 10};
 const uint8_t EXTRA_IF_ONLY7[] = {7, 5, 10};
 
@@ -26,6 +26,7 @@ const uint8_t EXTRA_ONLY7_CNT = ARRLEN(EXTRA_IF_ONLY7);
 const IPAddress ip_3(192, 168, 88, 3);
 const IPAddress ip_4(192, 168, 88, 4);
 const IPAddress ip_8(192, 168, 88, 8);
+const IPAddress ip_9(192, 168, 88, 9);
 
 const byte MAC_ADDR[] = {0x02, 0x11, 0x22, 0x00, 0x00, 0x01};
 const IPAddress STATIC_IP(192, 168, 88, 2);
