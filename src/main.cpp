@@ -32,8 +32,10 @@ void setup() {
   Serial.begin(SERIAL0_BAUD);
   Serial.setTimeout(10);
   logLine("Setup Monitoring", true);
+  logLine("Version: ", false);
+  logLine(VERSION, true);
+  logLine("IP: ", false);
   logLine(SERVER_IP, true);
-  logLine(API_KEY, true);
 
   initSerials();
 
